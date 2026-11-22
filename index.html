@@ -354,7 +354,7 @@ function mockText(text){const l=' '+text.toLowerCase()+' ',m=M(),d=day();const h
  if(category==='decision'||category==='personal')reply=`Okay ${addressee()} 🙏 ${CH()} will get back to you soon.`;
  return {category,reply,mood:symptoms.length?'low':'good',symptoms,took_meds:took,walk_minutes:0,urgent,meal,note_for_family:''}}
 let flip=0;
-function mockPhoto(){flip++;const m=M(),x=m.meds[0];
+function mockPhoto(){flip++;const m=M(),x=m.meds.find(y=>/amlodipine/i.test(y.name))||m.meds[0];
  if(flip%3===0)return {kind:'document',reply:`Thank you! Reading it now — I'll send it to ${CH()} to check 🙏`};
  if(flip%3===1)return {kind:'medicine',label_read:x?x.name:'tablet',med_id:x?.id||null,wrong:false,due_now:x&&!day().doses[x.id],reply:x?`Yes, this is ${x.name} (for ${x.for}). ${day().doses[x.id]?'Already taken today ✅':'Take 1 now, '+x.note+', and send 👍'}`:'I can see a tablet strip.'};
  return {kind:'meal',meal:{slot:slotNow(),items:'Rice, sambar, beans palya, curd',verdict:'okay',followed:['Half plate vegetables','Protein each meal'],broke:['Rice max 1 small cup'],tip:'Half the rice, double the palya.'},reply:'Good lunch 😊 Next time half the rice and more palya — keeps sugar steady.'}}
