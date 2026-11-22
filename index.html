@@ -400,7 +400,7 @@ function vPhone(){const m=M(),d=day();
    ${isCare()?`<button data-sched="guide">🧭 Send today's care plan to ${esc(m.contact.name)}</button>`:''}
    <button data-sched="ask">❓ ${esc(addressee())} asks “Which tablet now?”</button>
   </div>
-  <label class="chk small" style="margin-top:10px"><input type="checkbox" id="asVoice" ${S.settings.asVoice?'checked':''}> Send Saathi's messages as voice notes (${LANGS[m.lang]||'English'})</label>
+  <label class="chk small" style="margin-top:10px"><input type="checkbox" id="asVoice" ${S.settings.asVoice?'checked':''}> Send Saathi's messages as voice notes (${LANGS[m.lang]||"English"}). Voice notes play aloud; when Amma sends a voice note, Saathi replies with one.</label>
   <p class="muted small">On the phone: tap 👍, type, tap 🎤 to speak, or 📎 send a photo of a tablet strip, a meal, or a prescription / lab report.</p>
   <h2>What Saathi noted for ${esc(CH())}</h2>
   <div class="noted">${d.notes.map(n=>`<div class="note ${n.lvl}"><time>${n.t}</time>${esc(n.text)}</div>`).join('')||'<p class="muted">Nothing yet.</p>'}</div>
@@ -602,7 +602,7 @@ function vSettings(){const m=M();const medsTxt=m.meds.map(x=>`${x.name} | ${x.wh
   <div><label for="sChild">Your name</label><input type="text" id="sChild" value="${esc(CH())}"></div>
   <div><label for="sModel">Claude model</label><input type="text" id="sModel" value="${esc(S.settings.model)}"></div>
   <div class="full"><label for="sKey">Claude API key (optional)</label><input type="password" id="sKey" value="${esc(S.settings.key)}" placeholder="Leave blank to use the server key"></div>
-  <div class="full"><label class="chk"><input type="checkbox" id="sSpeak" ${S.settings.speak?'checked':''}> Play Saathi's replies aloud</label></div></div>
+</div>
  <div class="row"><button class="primary" id="saveApp">Save settings</button><button id="resetAll">Reset demo data</button></div>
  <p class="muted small">AI status: ${S.settings.key?'your own key':AI_MODE==='server'?'Claude via server':'offline'}. The key stays in this browser.</p></div>`}
 
@@ -621,7 +621,7 @@ window.addEventListener('hashchange',render);
 /* ---------- chat ---------- */
 function push(x){day().chat.push({t:hhmm(),...x});save();render()}
 function speak(t,lang){try{const u=new SpeechSynthesisUtterance(String(t).replace(/<[^>]+>/g,''));u.lang=lang||M().lang;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
-function saathiSays(text,extra={}){const voice=S.settings.asVoice&&!extra.type;push({from:'in',text:esc(text),...extra,...(voice?{type:'voice'}:{})});if(S.settings.speak)speak(text)}
+function saathiSays(text,extra={},asVoice=false){const voice=(S.settings.asVoice||asVoice)&&!extra.type;push({from:'in',text:esc(text),...extra,...(voice?{type:'voice'}:{})});if(voice)speak(text)}
 function markTaken(id,how){const d=day();if(d.doses[id])return;d.doses[id]=hhmm();const x=medById(id);if(x.left>0)x.left--;note(`${x.name} ${isCare()?'given':'taken'} (${how})`,'ok')}
 function logMeal(ml,img){if(!ml||!ml.items)return;day().meals.unshift({t:hhmm(),slot:ml.slot||slotNow(),items:ml.items,verdict:ml.verdict||'okay',followed:ml.followed||[],broke:ml.broke||[],tip:ml.tip||'',img});
  note(`${ml.slot||'Meal'}: ${ml.items} — ${ml.verdict}${ml.broke?.length?' (broke: '+ml.broke.join(', ')+')':''}`,ml.verdict==='poor'?'amber':'ok')}
@@ -635,13 +635,13 @@ async function handleText(text,isVoice){
  if(r.meal)logMeal(r.meal);
  d.checkins.push({t:hhmm(),text,mood:r.mood,symptoms:r.symptoms||[],urgent:!!r.urgent});d.mood=r.mood;
  const cat=r.urgent?'red_flag':(r.category||'routine'),R=M().rules;d.waiting=d.waiting||[];
- if(r.urgent){d.sos.push({t:hhmm(),text});note(`URGENT — ${r.symptoms?.join(', ')||'unwell'}. Told to call 108. ${CH()} alerted.`,'red');toast(`🚨 Alert sent to ${CH()}`);return saathiSays(r.reply,{urgent:true})}
+ if(r.urgent){d.sos.push({t:hhmm(),text});note(`URGENT — ${r.symptoms?.join(', ')||'unwell'}. Told to call 108. ${CH()} alerted.`,'red');toast(`🚨 Alert sent to ${CH()}`);return saathiSays(r.reply,{urgent:true},isVoice)}
  if(r.symptoms?.length)note(`Mentioned ${r.symptoms.join(', ')}`,'amber');else if(r.note_for_family)note(r.note_for_family);
  if(cat==='decision'||cat==='personal'){d.waiting.push({id:uid(),t:hhmm(),text,cat});note(`Waiting for ${CH()}: “${text}” (${cat==='decision'?'needs a decision':'for you'})`,'amber');
-  if(R[cat]==='ack')saathiSays(r.reply||`Okay 🙏 ${CH()} will get back to you soon.`);else{save();render()}return}
- if(cat==='chatter'){if(R.chatter==='reply')saathiSays(r.reply||'🙏');else if(R.chatter==='pray')push({from:'in',type:'big',text:'🙏'});else{save();render()}return}
+  if(R[cat]==='ack')saathiSays(r.reply||`Okay 🙏 ${CH()} will get back to you soon.`,{},isVoice);else{save();render()}return}
+ if(cat==='chatter'){if(R.chatter==='reply')saathiSays(r.reply||'🙏',{},isVoice);else if(R.chatter==='pray')push({from:'in',type:'big',text:'🙏'});else{save();render()}return}
  if(R.routine!=='instant'){d.waiting.push({id:uid(),t:hhmm(),text,cat});note(`Waiting for ${CH()}: “${text}”`,'amber');save();render();return}
- saathiSays(r.reply)}
+ saathiSays(r.reply,{},isVoice)}
 
 async function handlePhoto(file){if(!file)return;
  const img=await new Promise(res=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,1000/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.82))};im.src=fr.result};fr.readAsDataURL(file)});
@@ -741,7 +741,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
   case 'addMem':{const n=blankMember();n.call='New member';S.members.push(n);S.active=n.id;save();render();break}
   case 'saveMem':saveMember();break;
   case 'delMem':{S.members=S.members.filter(x=>x.id!==m.id);S.active=S.members[0].id;save();render();toast('Removed');break}
-  case 'saveApp':S.settings.child=val('sChild')||'Ajay';S.settings.model=val('sModel')||'claude-sonnet-5-5';S.settings.key=val('sKey');S.settings.speak=$('#sSpeak').checked;save();render();toast('Settings saved');break;
+  case 'saveApp':S.settings.child=val('sChild')||'Ajay';S.settings.model=val('sModel')||'claude-sonnet-5-5';S.settings.key=val('sKey');save();render();toast('Settings saved');break;
   case 'resetAll':{const keep=S.settings;S=fresh();S.settings=keep;save();render();toast('Demo data reset');break}}
 });
 $('#photoFile').addEventListener('change',e=>{handlePhoto(e.target.files[0]);e.target.value=''});
