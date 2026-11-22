@@ -3,7 +3,7 @@
 **Builder's Day 2026 · RFS 17: AI Agents for Elder Care**
 
 **Live app:** https://saathi-seven-tau.vercel.app/
-**Demo video (2 min):** https://saathi-seven-tau.vercel.app/demo/saathi-demo.mp4 (also in this repo: `demo/saathi-demo.mp4`)
+**Demo video (2 min):** https://github.com/ajaykumarkr/saathi/blob/main/demo/saathi-demo.mp4 (click "View raw" / download to play)
 **Use-case deck:** https://claude.ai/artifact/RRyFjP4aNt4F6Kit6rVx4M
 **Submission kit (pitch, demo script, Q&A):** https://claude.ai/artifact/JZBnZZRPtaNQzTXnq8NwFL
 
