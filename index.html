@@ -350,7 +350,7 @@ function recordText(){const m=M(),w=weekStats();
 const MIC='<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v7a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-2.1A7 7 0 0 0 19 12z"/></svg>';
 const CLIP='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.5l-8.5 8.5a5 5 0 0 1-7-7L14 5.5a3.5 3.5 0 0 1 5 5L10.5 19a2 2 0 0 1-3-3L15 8.5"/></svg>';
 const SEND='<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l18-8L3 4v6l12 2-12 2z"/></svg>';
-let busy=false,sumScope='day';
+let busy=false,sumScope='day',sumWho='all';
 function bubble(m,i){const d=day();
  if(m.type==='typing')return `<div class="m in"><span class="typing">Saathi is typing…</span></div>`;
  const secs=Math.min(9,Math.max(2,Math.round((m.text||'').replace(/<[^>]+>/g,'').length/14)));
@@ -406,7 +406,34 @@ function insights(m){const w=weekStats(m),out=[];
  if(badDays.length>=2&&low){const overlap=badDays.filter(k=>m.days[k]?.doses&&!m.days[k].doses[low.id]).length;if(overlap)out.push({k:'Pattern',v:'Low days ↔ missed doses',d:`On ${overlap} of ${badDays.length} low-mood days, ${low.name} was also missed.`})}
  const ab=m.reports.filter(r=>r.flag!=='normal');if(ab.length)out.push({k:'Last reports',v:`${ab.length} out of range`,d:ab.slice(0,3).map(r=>`${r.name} ${r.value}`).join(' · ')});
  return out}
-function vSummary(){const m=M(),d=day(),a=alerts(),red=a.filter(x=>x.lvl==='red'),amb=a.filter(x=>x.lvl==='amber');
+function chips(){return `<div class="row noprint" style="margin:0 0 18px"><div class="seg" role="group" aria-label="Whose summary">${[['all','All family'],...S.members.map(m=>[m.id,m.call||m.name])].map(([k,l])=>`<button data-who="${k}" aria-pressed="${sumWho===k}">${esc(l)}</button>`).join('')}</div></div>`}
+function vFamilyAll(){const ms=S.members,st=ms.map(statusOf);
+ const lvl=st.some(s=>s.lvl==='red')?'red':st.some(s=>s.lvl==='amber')?'amber':'ok';
+ const need=ms.filter((m,i)=>st[i].lvl!=='ok');
+ const head=lvl==='red'?`Call ${ms[st.findIndex(s=>s.lvl==='red')].call} now`:need.length?`${need.map(m=>m.call).join(' and ')} need${need.length>1?'':'s'} a nudge`:'Everyone is doing well today';
+ let tk=0,du=0,meals=0,good=0;ms.forEach(m=>{const d=day(today(),m);const due=m.meds.filter(x=>toMin(x.when)<=nowMin());du+=due.length;tk+=due.filter(x=>d.doses[x.id]).length;meals+=d.meals.length;good+=d.meals.filter(x=>x.verdict==='good').length});
+ const al=ms.flatMap(m=>alerts(m).map(a=>({...a,m})));
+ const tasks=ms.flatMap(m=>m.tasks.filter(t=>!t.booked).map(t=>({...t,m}))).sort((a,b)=>a.due.localeCompare(b.due));
+ const refills=ms.flatMap(m=>m.meds.filter((x,i,arr)=>arr.findIndex(y=>y.name===x.name)===i).map(x=>({...x,m,days:Math.floor(x.left/x.perDay)})).filter(x=>x.days<=7&&!m.ordered[x.name]));
+ const soon=tasks.filter(t=>daysTo(t.due)<=7);
+ return chips()+`<div class="status ${lvl}"><h1>${esc(head)}</h1><p style="margin:0">${ms.length} people · ${al.filter(a=>a.lvl!=='grey').length} alerts today · ${soon.length} appointments/tests due this week · ${refills.length} refill${refills.length===1?'':'s'} needed</p></div>
+ <div class="kpis">
+  <div class="kpi"><span>Tablets confirmed (all)</span><b>${tk}/${du}</b></div>
+  <div class="kpi"><span>Meals logged today</span><b>${meals} <small style="font-size:15px">${good} good</small></b></div>
+  <div class="kpi"><span>Alerts today</span><b>${al.filter(a=>a.lvl!=='grey').length}</b></div>
+  <div class="kpi"><span>Due this week</span><b>${soon.length+refills.length}</b></div>
+ </div>
+ <h2>By person</h2><div class="ov">${ms.map((m,i)=>{const s=st[i],d=day(today(),m),due=m.meds.filter(x=>toMin(x.when)<=nowMin());
+  return `<button class="ovc ${s.lvl}" data-who="${m.id}"><b>${esc(m.call||m.name)}</b> <span class="muted small">${esc(m.relation)}${m.contact.type==='caretaker'?' · via '+esc(m.contact.name):''}</span><span class="st">${esc(s.text)}</span>${s.top?`<span class="small">${esc(s.top)}</span>`:''}
+  <div class="mini" style="margin-top:8px"><span>Tablets <b>${due.filter(x=>d.doses[x.id]).length}/${due.length}</b></span><span>Meals <b>${d.meals.length}</b></span><span>Walk <b>${d.walk}m</b></span></div><span class="small" style="display:block;margin-top:8px;color:var(--blue);font-weight:700">See details →</span></button>`}).join('')}</div>
+ <div class="grid2"><div><h2>Needs attention</h2><div class="list">${al.length?al.map(a=>`<div class="item"><span class="dot ${a.lvl}"></span><span><span class="tag">${esc(a.m.call)}</span> ${esc(a.msg)}</span><time>${a.t||''}</time></div>`).join(''):'<p class="muted">Nothing today.</p>'}</div></div>
+ <div><h2>Saathi reminds you</h2><div class="list">${tasks.map(t=>{const n=daysTo(t.due);return `<div class="item ${n<0?'overdue':n<=7?'hl':''}"><span class="dot ${n<0?'red':'amber'}"></span><span><span class="tag">${esc(t.m.call)}</span> <b>${esc(t.what)}</b><br><span class="small muted">${n<0?`Overdue by ${-n} days`:`Due in ${n} days`}</span></span><button data-mid="${t.m.id}" data-book="${t.id}">Mark booked</button></div>`}).join('')}
+  ${refills.map(x=>`<div class="item hl"><span class="dot amber"></span><span><span class="tag">${esc(x.m.call)}</span> <b>Refill ${esc(x.name)}</b><br><span class="small muted">${x.days} days left</span></span><button class="primary" data-mid="${x.m.id}" data-order="${esc(x.name)}">Order</button></div>`).join('')||''}${!tasks.length&&!refills.length?'<p class="muted">Nothing pending.</p>':''}</div></div></div>
+ <h2>Last 7 days, side by side</h2>
+ <table class="week stack"><thead><tr><th>Person</th><th class="n">Tablets</th><th class="n">Meals on plan</th><th class="n">Walk / day</th><th>Symptoms</th><th>Weakest area</th></tr></thead><tbody>${ms.map(m=>{const w=weekStats(m),tot=w.meds.reduce((a,x)=>a+x.due,0),tkn=w.meds.reduce((a,x)=>a+x.tk,0),pct=tot?Math.round(100*tkn/tot):null,mp=w.meals.length?Math.round(100*w.good/w.meals.length)+'%':'—',ins=insights(m)[0];
+  return `<tr><td><b>${esc(m.call)}</b></td><td class="n">${pct==null?'—':pct+'%'}</td><td class="n">${mp}</td><td class="n">${w.walkAvg} min</td><td>${esc([...new Set(w.syms.flatMap(s=>s.symptoms))].join(', ')||'none')}</td><td>${ins?esc(ins.k+': '+ins.v):'—'}</td></tr>`}).join('')}</tbody></table>
+ <h2>Saathi's family brief</h2><button class="primary" id="famBrief">Summarise the family</button><div id="briefOut"></div>`}
+function vSummary(){if(sumWho==='all'||!S.members.some(x=>x.id===sumWho))return vFamilyAll();S.active=sumWho;const m=M(),d=day(),a=alerts(),red=a.filter(x=>x.lvl==='red'),amb=a.filter(x=>x.lvl==='amber');
  const lvl=red.length?'red':amb.length?'amber':'ok';
  const head=red.length?`Call ${m.call} now`:amb.length?`${m.call} needs a nudge: ${amb.length} thing${amb.length>1?'s':''} to check`:`${m.call} is doing well today`;
  const due=m.meds.filter(x=>toMin(x.when)<=nowMin()),taken=due.filter(x=>d.doses[x.id]).length;
@@ -426,7 +453,7 @@ function vSummary(){const m=M(),d=day(),a=alerts(),red=a.filter(x=>x.lvl==='red'
   <p class="muted small">Squares = meals (green good · amber okay · red poor)</p></div>
   <div><h2>Doctor's rules broken most</h2>${topBroke.length?topBroke.map(([r,c])=>`<div class="hbar"><div><span class="small">${esc(r)}</span><div class="tr2"><div class="fl" style="width:${100*c/maxB}%"></div></div></div><b>${c}×</b></div>`).join(''):'<p class="muted">None this week 🎉</p>'}
   <h2>Tablets this week</h2><div class="list">${w.meds.map(x=>`<div class="item"><span class="dot ${x.pct<70?'red':x.pct<90?'amber':'ok'}"></span><span>${esc(x.name)} <span class="muted small">· ${esc(x.note)}</span></span><b>${x.pct}%</b></div>`).join('')}</div></div></div>`;
- return vOverview()+`<h2 style="margin-top:30px">Deeper insight: ${esc(m.call)}</h2><div class="status ${lvl}"><h1>${head}</h1><p style="margin:0">${red.length?esc(red[0].msg)+' — Saathi told them to sit down and call 108.':amb.length?amb.slice(0,3).map(x=>esc(x.msg)).join(' · '):'Tablets confirmed, meals logged, no symptoms reported.'}</p>${red.length?`<p style="margin:8px 0 0"><b>Call: ${esc(m.contact.phone)}${isCare()?` (${esc(m.contact.name)})`:''}</b></p>`:''}</div>
+ return chips()+`<p class="small muted" style="margin:-6px 0 10px">Deeper insight: <b>${esc(m.call)}</b> · ${esc(m.name)}, ${esc(m.relation)}</p><div class="status ${lvl}"><h1>${head}</h1><p style="margin:0">${red.length?esc(red[0].msg)+' — Saathi told them to sit down and call 108.':amb.length?amb.slice(0,3).map(x=>esc(x.msg)).join(' · '):'Tablets confirmed, meals logged, no symptoms reported.'}</p>${red.length?`<p style="margin:8px 0 0"><b>Call: ${esc(m.contact.phone)}${isCare()?` (${esc(m.contact.name)})`:''}</b></p>`:''}</div>
  <div class="kpis">
   <div class="kpi"><span>Tablets confirmed</span><b>${taken}/${due.length}</b></div>
   <div class="kpi"><span>Meals today</span><b>${d.meals.length} <small style="font-size:15px">${d.meals.filter(x=>x.verdict==='good').length} good</small></b></div>
@@ -585,6 +612,10 @@ function toggleMic(btn){const SR=window.SpeechRecognition||window.webkitSpeechRe
 async function brief(){const o=$('#briefOut');o.innerHTML='<div class="ai">Reading the logs…</div>';let t;
  try{t=await claude(`You brief ${CH()} about their ${M().relation.toLowerCase()||'parent'} ${M().call}. Plain English, exactly 4 bullet lines starting with "•": ${sumScope==='day'?"today's tablets, today's food judged against the doctor's diet advice (be specific), anything needing attention, a suggested opening line for a phone call":"tablet adherence pattern (name the weakest dose), food vs the doctor's diet advice (most broken rule, with counts), activity and symptoms, and the next appointment/test to book"}. No diagnosis, no medicine changes — suggest asking the doctor instead.`,digest(sumScope),false)}catch(e){toast(e.message)}
  o.innerHTML=`<div class="ai">${esc(t||mockBrief(sumScope))}</div>`}
+async function famBrief(){const o=$('#briefOut');o.innerHTML='<div class="ai">Reading everyone\'s week…</div>';let t;
+ const data=JSON.stringify(S.members.map(m=>({who:m.call,relation:m.relation,conditions:m.conds,status:statusOf(m),alerts:alerts(m).map(a=>a.msg),week:(({meds,good,okay,poor,broke,walkAvg,syms})=>({meds:meds.map(x=>x.name+' '+x.pct+'%'),good,okay,poor,broke,walkAvg,symptoms:syms.map(s=>s.symptoms)}))(weekStats(m)),pending:m.tasks.filter(t=>!t.booked).map(t=>t.what+' due '+t.due)})));
+ try{t=await claude(`You brief ${CH()}, who looks after several elderly family members from another city. Plain English, 4–5 bullet lines starting with "•": who needs attention first and why, the biggest pattern across the family this week (tablets, food vs doctor's advice, walking), what to book or order this week, and one suggested call to make today. No diagnosis, no medicine changes.`,data,false)}catch(e){toast(e.message)}
+ o.innerHTML=`<div class="ai">${esc(t||S.members.map(m=>{const s=statusOf(m),i=insights(m)[0];return `• ${m.call}: ${s.text}${s.top?' — '+s.top:''}${i?'. '+i.k+': '+i.v:''}.`}).join('\n'))}</div>`}
 async function docNote(){const o=$('#docOut');o.innerHTML='<div class="ai">Drafting…</div>';let t;
  try{t=await claude(`Write a concise note (under 160 words) the family can send to a doctor before a visit: current medicines with 7-day adherence %, recent abnormal reports, symptoms with dates, diet adherence vs the given advice, activity, and 2–3 questions for the doctor. Neutral clinical tone, no diagnosis, end with "(Family-reported log, not a diagnosis.)"`,recordText()+'\n\nRAW:'+digest('week'),false)}catch(e){toast(e.message)}
  o.innerHTML=`<div class="ai" id="docTxt">${esc(t||recordText())}</div>`}
@@ -600,7 +631,9 @@ function saveMember(){const m=M();
 
 document.addEventListener('submit',e=>{if(e.target.id!=='bar')return;e.preventDefault();const i=$('#msg');const t=i.value.trim();if(!t||busy)return;i.value='';handleText(t,false)});
 document.addEventListener('change',e=>{if(e.target.id==='who'){S.active=e.target.value;save();render()}if(e.target.id==='asVoice'){S.settings.asVoice=e.target.checked;save()}});
-document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const m=M();
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+ if(b.dataset.who){sumWho=b.dataset.who;if(sumWho!=='all')S.active=sumWho;save();render();scrollTo(0,0);return}
+ if(b.dataset.mid)S.active=b.dataset.mid;const m=M();
  if(b.dataset.taken){push({from:'out',type:'big',text:'👍'});markTaken(b.dataset.taken,'👍 reply');save();saathiSays(`Well done! Noted ✅`);return}
  if(b.dataset.later){push({from:'out',text:'Later'});saathiSays(`Okay, I'll remind again in 15 minutes ⏰`);return}
  if(b.dataset.play){const x=day().chat[+b.dataset.play];if(x)speak(x.text,x.from==='in'?m.lang:m.lang);return}
@@ -615,6 +648,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
   case 'mic':toggleMic(b);break;
   case 'nudge':{const t=val('nudgeTxt');if(t){day().chat.push({from:'in',t:hhmm(),text:`<b>From ${esc(CH())}:</b> ${esc(t)}`});note(`${CH()} sent: ${t}`);save();toast(`Sent to ${addressee()}'s WhatsApp`)}break}
   case 'brief':brief();break;
+  case 'famBrief':famBrief();break;
   case 'docAi':docNote();break;
   case 'emailRec':{const to=$('#shareTo').value;location.href=`mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(`Health summary — ${m.name}, ${m.age}`)}&body=${encodeURIComponent(($('#docTxt')?.textContent?$('#docTxt').textContent+'\n\n':'')+recordText())}`;break}
   case 'printRec':window.print();break;
