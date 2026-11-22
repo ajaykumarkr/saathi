@@ -12,8 +12,9 @@
    PICTURE: a real-looking WhatsApp phone; a printable health record; a status-first summary
    COLOUR+TYPE: marigold + deep indigo; WhatsApp greens inside the phone; Atkinson Hyperlegible (built for low vision)
    LAYOUT: phone + "what Saathi noted"; memo-style record; board with daily/weekly toggle; simple settings forms */
-:root{color-scheme:light dark;--bg:light-dark(#fffcf6,#13161b);--card:light-dark(#fff,#1c2027);--ink:light-dark(#17202b,#eef1f5);--mute:light-dark(#5b6573,#9aa4b2);--line:light-dark(#ebe4d6,#2c323b);--sun:#f2a516;--sunBg:light-dark(#fff3d6,#3a2d10);--blue:light-dark(#1e3a5f,#9dbde6);--blueBg:light-dark(#e9eff7,#1d2838);--red:light-dark(#b9342a,#ff8f84);--redBg:light-dark(#fbe8e5,#3b1f1c);--ok:light-dark(#2d7650,#83d3a4);--okBg:light-dark(#e5f3ea,#1b3325);
---waHead:light-dark(#008069,#202c33);--waBg:light-dark(#efeae2,#0b141a);--waIn:light-dark(#ffffff,#202c33);--waOut:light-dark(#d9fdd3,#005c4b);--waInk:light-dark(#111b21,#e9edef);--waMute:light-dark(#667781,#8696a0);--waBar:light-dark(#f0f2f5,#1f2c34);--waBtn:#00a884}
+:root{color-scheme:light dark;--bg:#fffcf6;--card:#fff;--ink:#17202b;--mute:#5b6573;--line:#ebe4d6;--sun:#f2a516;--sunBg:#fff3d6;--blue:#1e3a5f;--blueBg:#e9eff7;--red:#b9342a;--redBg:#fbe8e5;--ok:#2d7650;--okBg:#e5f3ea;--waHead:#008069;--waBg:#efeae2;--waIn:#ffffff;--waOut:#d9fdd3;--waInk:#111b21;--waMute:#667781;--waBar:#f0f2f5;--waBtn:#00a884}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#13161b;--card:#1c2027;--ink:#eef1f5;--mute:#9aa4b2;--line:#2c323b;--sunBg:#3a2d10;--blue:#9dbde6;--blueBg:#1d2838;--red:#ff8f84;--redBg:#3b1f1c;--ok:#83d3a4;--okBg:#1b3325;--waHead:#202c33;--waBg:#0b141a;--waIn:#202c33;--waOut:#005c4b;--waInk:#e9edef;--waMute:#8696a0;--waBar:#1f2c34}}
+:root[data-theme=dark]{--bg:#13161b;--card:#1c2027;--ink:#eef1f5;--mute:#9aa4b2;--line:#2c323b;--sunBg:#3a2d10;--blue:#9dbde6;--blueBg:#1d2838;--red:#ff8f84;--redBg:#3b1f1c;--ok:#83d3a4;--okBg:#1b3325;--waHead:#202c33;--waBg:#0b141a;--waIn:#202c33;--waOut:#005c4b;--waInk:#e9edef;--waMute:#8696a0;--waBar:#1f2c34}
 :root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
 *{box-sizing:border-box;min-width:0}
 body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 "Atkinson Hyperlegible",system-ui,sans-serif;overflow-x:clip}
@@ -35,7 +36,7 @@ h3{font-size:18px;margin:18px 0 8px}
 .sub{color:var(--mute);margin:0 0 18px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px}
 .tag{display:inline-block;font-size:14px;font-weight:700;padding:2px 10px;border-radius:99px;background:var(--blueBg);color:var(--blue);white-space:nowrap}
-.tag.red{background:var(--redBg);color:var(--red)}.tag.ok{background:var(--okBg);color:var(--ok)}.tag.amber{background:var(--sunBg);color:light-dark(#8a5a00,#ffcf6b)}
+.tag.red{background:var(--redBg);color:var(--red)}.tag.ok{background:var(--okBg);color:var(--ok)}.tag.amber{background:var(--sunBg);color:#8a5a00}
 .primary{background:var(--blue);color:#fff;border:0;font-weight:700}
 .danger{color:var(--red)}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
@@ -65,7 +66,7 @@ label{display:block;font-weight:700;margin:12px 0 4px;font-size:15px}
 .m.out .t::after{content:" ✓✓";color:#53bdeb}
 .m img{display:block;width:220px;max-width:100%;border-radius:6px;margin-bottom:4px}
 .m .big{font-size:34px;line-height:1}
-.m.urgent{background:light-dark(#ffe1dc,#5a1f1a)}
+.m.urgent{background:#ffe1dc}
 .qr{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
 .qr button{min-height:38px;border-radius:18px;border:1px solid var(--waBtn);color:var(--waBtn);background:transparent;padding:4px 14px;font-weight:600;font-size:15px}
 .voice{display:flex;align-items:center;gap:8px;min-width:190px}
