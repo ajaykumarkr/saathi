@@ -127,6 +127,15 @@ details.add summary{cursor:pointer;font-weight:700;color:var(--blue);min-height:
 .inline{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:8px;align-items:end}
 
 /* settings */
+.ov{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-bottom:8px}
+.ovc{text-align:left;display:block;width:100%;border-radius:18px;padding:14px 16px;border:2px solid transparent;background:var(--card);box-shadow:0 1px 0 var(--line)}
+.ovc.red{background:var(--redBg)}.ovc.amber{background:var(--sunBg)}.ovc.ok{background:var(--okBg)}
+.ovc[aria-current]{border-color:var(--blue)}
+.ovc b{font-size:20px}.ovc .st{display:block;font-weight:700;margin:2px 0 8px}
+.ovc .mini{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--mute)}.ovc .mini span b{font-size:15px;color:var(--ink)}
+.ins{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.insc{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+.insc span{color:var(--mute);font-size:14px;display:block}.insc b{font-size:18px;display:block;margin:2px 0 4px}
 .members{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
 .mem{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:14px;text-align:left;display:block;width:100%}
 .mem[aria-current]{border-color:var(--sun)}
@@ -377,6 +386,26 @@ function vPhone(){const m=M(),d=day();
   <div class="noted">${d.notes.map(n=>`<div class="note ${n.lvl}"><time>${n.t}</time>${esc(n.text)}</div>`).join('')||'<p class="muted">Nothing yet.</p>'}</div>
  </div></div>`}
 
+function statusOf(m){const a=alerts(m),red=a.filter(x=>x.lvl==='red'),amb=a.filter(x=>x.lvl==='amber');
+ return {lvl:red.length?'red':amb.length?'amber':'ok',text:red.length?`Call ${m.call} now`:amb.length?`${amb.length} thing${amb.length>1?'s':''} to check`:'Doing well',top:(red[0]||amb[0]||{}).msg||''}}
+function vOverview(){return `<h1>Family today</h1><p class="sub">Tap a person for deeper insight.</p><div class="ov">${S.members.map(m=>{const s=statusOf(m),d=day(today(),m),due=m.meds.filter(x=>toMin(x.when)<=nowMin());
+ const next=[...m.tasks].filter(t=>!t.booked).sort((a,b)=>a.due.localeCompare(b.due))[0];
+ return `<button class="ovc ${s.lvl}" data-pick="${m.id}" ${m.id===S.active?'aria-current="true"':''}><b>${esc(m.call||m.name)}</b> <span class="muted small">${esc(m.relation)}${m.contact.type==='caretaker'?' · via '+esc(m.contact.name):''}</span><span class="st">${esc(s.text)}</span>${s.top?`<span class="small">${esc(s.top)}</span>`:''}
+ <div class="mini" style="margin-top:8px"><span>Tablets <b>${due.filter(x=>d.doses[x.id]).length}/${due.length}</b></span><span>Meals <b>${d.meals.length}</b></span><span>Walk <b>${d.walk}m</b></span>${next?`<span>Next <b>${daysTo(next.due)<0?'overdue':daysTo(next.due)+'d'}</b></span>`:''}</div></button>`}).join('')}</div>`}
+function insights(m){const w=weekStats(m),out=[];
+ const low=[...w.meds].filter(x=>x.due).sort((a,b)=>a.pct-b.pct)[0];
+ if(low&&low.pct<90)out.push({k:'Weakest tablet',v:`${low.name} · ${low.pct}%`,d:`Missed ${low.due-low.tk} of ${low.due} times (${low.when}, ${low.note}). Ask the doctor if it can move to a time with another tablet.`});
+ const topB=Object.entries(w.broke).sort((a,b)=>b[1]-a[1])[0];
+ if(topB)out.push({k:"Diet rule broken most",v:`“${topB[0]}” · ${topB[1]}×`,d:`${w.poor} poor and ${w.okay} okay meals out of ${w.meals.length} this week.`});
+ const goodPct=w.meals.length?Math.round(100*w.good/w.meals.length):null;
+ if(goodPct!=null)out.push({k:'Meals on plan',v:`${goodPct}%`,d:`${w.good} of ${w.meals.length} meals followed ${m.diet.by||'the doctor'}'s advice.`});
+ const days=last7().map(k=>m.days[k]?.walk||0),hit=days.filter(x=>x>=m.walkGoal).length;
+ out.push({k:'Walking',v:`${w.walkAvg} min/day`,d:`Goal ${m.walkGoal} min met on ${hit} of 7 days.`});
+ if(w.syms.length)out.push({k:'Symptoms this week',v:[...new Set(w.syms.flatMap(s=>s.symptoms))].join(', '),d:`Reported ${w.syms.length} time${w.syms.length>1?'s':''}. Mention at the next visit.`});
+ const badDays=last7().filter(k=>(m.days[k]?.checkins||[]).some(c=>c.mood==='low'));
+ if(badDays.length>=2&&low){const overlap=badDays.filter(k=>m.days[k]?.doses&&!m.days[k].doses[low.id]).length;if(overlap)out.push({k:'Pattern',v:'Low days ↔ missed doses',d:`On ${overlap} of ${badDays.length} low-mood days, ${low.name} was also missed.`})}
+ const ab=m.reports.filter(r=>r.flag!=='normal');if(ab.length)out.push({k:'Last reports',v:`${ab.length} out of range`,d:ab.slice(0,3).map(r=>`${r.name} ${r.value}`).join(' · ')});
+ return out}
 function vSummary(){const m=M(),d=day(),a=alerts(),red=a.filter(x=>x.lvl==='red'),amb=a.filter(x=>x.lvl==='amber');
  const lvl=red.length?'red':amb.length?'amber':'ok';
  const head=red.length?`Call ${m.call} now`:amb.length?`${m.call} needs a nudge: ${amb.length} thing${amb.length>1?'s':''} to check`:`${m.call} is doing well today`;
@@ -397,7 +426,7 @@ function vSummary(){const m=M(),d=day(),a=alerts(),red=a.filter(x=>x.lvl==='red'
   <p class="muted small">Squares = meals (green good · amber okay · red poor)</p></div>
   <div><h2>Doctor's rules broken most</h2>${topBroke.length?topBroke.map(([r,c])=>`<div class="hbar"><div><span class="small">${esc(r)}</span><div class="tr2"><div class="fl" style="width:${100*c/maxB}%"></div></div></div><b>${c}×</b></div>`).join(''):'<p class="muted">None this week 🎉</p>'}
   <h2>Tablets this week</h2><div class="list">${w.meds.map(x=>`<div class="item"><span class="dot ${x.pct<70?'red':x.pct<90?'amber':'ok'}"></span><span>${esc(x.name)} <span class="muted small">· ${esc(x.note)}</span></span><b>${x.pct}%</b></div>`).join('')}</div></div></div>`;
- return `<div class="status ${lvl}"><h1>${head}</h1><p style="margin:0">${red.length?esc(red[0].msg)+' — Saathi told them to sit down and call 108.':amb.length?amb.slice(0,3).map(x=>esc(x.msg)).join(' · '):'Tablets confirmed, meals logged, no symptoms reported.'}</p>${red.length?`<p style="margin:8px 0 0"><b>Call: ${esc(m.contact.phone)}${isCare()?` (${esc(m.contact.name)})`:''}</b></p>`:''}</div>
+ return vOverview()+`<h2 style="margin-top:30px">Deeper insight: ${esc(m.call)}</h2><div class="status ${lvl}"><h1>${head}</h1><p style="margin:0">${red.length?esc(red[0].msg)+' — Saathi told them to sit down and call 108.':amb.length?amb.slice(0,3).map(x=>esc(x.msg)).join(' · '):'Tablets confirmed, meals logged, no symptoms reported.'}</p>${red.length?`<p style="margin:8px 0 0"><b>Call: ${esc(m.contact.phone)}${isCare()?` (${esc(m.contact.name)})`:''}</b></p>`:''}</div>
  <div class="kpis">
   <div class="kpi"><span>Tablets confirmed</span><b>${taken}/${due.length}</b></div>
   <div class="kpi"><span>Meals today</span><b>${d.meals.length} <small style="font-size:15px">${d.meals.filter(x=>x.verdict==='good').length} good</small></b></div>
@@ -407,6 +436,7 @@ function vSummary(){const m=M(),d=day(),a=alerts(),red=a.filter(x=>x.lvl==='red'
  <h2>Saathi reminds you</h2>
  <div class="list">${tasks.map(t=>{const n=daysTo(t.due);return `<div class="item ${t.booked?'':n<0?'overdue':n<=7?'hl':''}"><span class="dot ${t.booked?'ok':n<0?'red':'amber'}"></span><span><b>${esc(t.what)}</b><br><span class="small muted">${t.booked?'Booked for '+fmtD(t.booked):n<0?`Overdue by ${-n} days`:`Due in ${n} days · ${fmtD(t.due)}`}</span></span>${t.booked?'<span class="tag ok">Booked</span>':`<span class="row" style="margin:0"><button data-book="${t.id}">Mark booked</button><button data-tell="${t.id}">Tell ${esc(addressee())}</button></span>`}</div>`}).join('')}
  ${refills.map(x=>`<div class="item hl"><span class="dot amber"></span><span><b>Refill ${esc(x.name)}</b><br><span class="small muted">${x.days} days of tablets left</span></span>${m.ordered[x.name]?'<span class="tag ok">Ordered</span>':`<button class="primary" data-order="${esc(x.name)}">Order refill</button>`}</div>`).join('')}</div>
+ <h2>Insights for ${esc(m.call)} (last 7 days)</h2><div class="ins">${insights(m).map(x=>`<div class="insc"><span>${esc(x.k)}</span><b>${esc(x.v)}</b><span>${esc(x.d)}</span></div>`).join('')}</div>
  <div class="row" style="margin-top:26px"><div class="seg" role="group" aria-label="Summary period"><button data-scope="day" aria-pressed="${sumScope==='day'}">Daily</button><button data-scope="week" aria-pressed="${sumScope==='week'}">Weekly</button></div></div>
  ${sumScope==='day'?daily:weekly}
  <h2>Saathi's ${sumScope==='day'?'daily':'weekly'} brief</h2>
