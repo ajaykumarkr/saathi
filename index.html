@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Saathi · Elder care</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: warm, plain, reassuring — a companion, not a hospital
+   IDEA: Amma's own WhatsApp + the family's status board
+   PICTURE: a real-looking WhatsApp phone for Amma; a status-first board for the child
+   COLOUR+TYPE: marigold + deep indigo for Saathi; WhatsApp's own greens inside the phone; Atkinson Hyperlegible
+   LAYOUT: phone left, "what Saathi noted" right; board and memo for child and doctor */
+:root{color-scheme:light dark;--bg:light-dark(#fffcf6,#13161b);--card:light-dark(#fff,#1c2027);--ink:light-dark(#17202b,#eef1f5);--mute:light-dark(#5b6573,#9aa4b2);--line:light-dark(#ebe4d6,#2c323b);--sun:#f2a516;--sunBg:light-dark(#fff3d6,#3a2d10);--blue:light-dark(#1e3a5f,#9dbde6);--blueBg:light-dark(#e9eff7,#1d2838);--red:light-dark(#b9342a,#ff8f84);--redBg:light-dark(#fbe8e5,#3b1f1c);--ok:light-dark(#2d7650,#83d3a4);--okBg:light-dark(#e5f3ea,#1b3325);
+--waHead:light-dark(#008069,#202c33);--waBg:light-dark(#efeae2,#0b141a);--waIn:light-dark(#ffffff,#202c33);--waOut:light-dark(#d9fdd3,#005c4b);--waInk:light-dark(#111b21,#e9edef);--waMute:light-dark(#667781,#8696a0);--waBar:light-dark(#f0f2f5,#1f2c34);--waBtn:light-dark(#00a884,#00a884)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 "Atkinson Hyperlegible",system-ui,sans-serif;overflow-x:clip}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;min-height:44px;border-radius:14px;border:1px solid var(--line);background:var(--card);padding:8px 16px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+header{position:sticky;top:0;z-index:5;background:var(--blue);color:#fff;display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:10px max(4vw,14px)}
+.brand{font-weight:700;font-size:22px;display:flex;align-items:center;gap:8px;margin-right:auto}
+.brand i{width:26px;height:26px;border-radius:50%;background:var(--sun);display:inline-block;box-shadow:inset -5px -5px 0 rgba(0,0,0,.15)}
+nav{display:flex;gap:4px;background:rgba(255,255,255,.12);padding:4px;border-radius:16px}
+nav a{color:#fff;text-decoration:none;padding:9px 14px;border-radius:12px;font-weight:700;min-height:44px;display:flex;align-items:center}
+nav a[aria-current]{background:var(--sun);color:#2a1c00}
+.gear{background:transparent;color:#fff;border-color:rgba(255,255,255,.35)}
+main{max-width:1100px;margin:0 auto;padding:24px max(4vw,14px) 60px}
+h1{font-size:clamp(30px,4.6vw,44px);line-height:1.05;margin:0 0 6px;text-wrap:balance}
+h2{font-size:21px;margin:28px 0 12px}
+.sub{color:var(--mute);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px}
+.tag{display:inline-block;font-size:14px;font-weight:700;padding:2px 10px;border-radius:99px;background:var(--blueBg);color:var(--blue);white-space:nowrap}
+.tag.red{background:var(--redBg);color:var(--red)}.tag.ok{background:var(--okBg);color:var(--ok)}.tag.amber{background:var(--sunBg);color:light-dark(#8a5a00,#ffcf6b)}
+.primary{background:var(--blue);color:#fff;border:0;font-weight:700}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.muted{color:var(--mute)}
+
+/* Amma: phone + side panel */
+.stage{display:grid;grid-template-columns:390px minmax(0,1fr);gap:28px;align-items:start}
+.phone{width:100%;max-width:390px;height:min(760px,calc(100vh - 110px));min-height:560px;border-radius:38px;border:10px solid #111;background:var(--waBg);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px -20px rgba(0,0,0,.45);color:var(--waInk);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px}
+.wa-top{background:var(--waHead);color:#fff;display:flex;align-items:center;gap:10px;padding:12px 14px}
+.wa-av{width:40px;height:40px;border-radius:50%;background:var(--sun);display:grid;place-items:center;font-weight:700;color:#2a1c00;flex:none}
+.wa-top b{display:block;font-size:17px}.wa-top small{opacity:.85;font-size:13px}
+.wa-chat{flex:1;overflow-y:auto;padding:12px 10px;display:flex;flex-direction:column;gap:6px;background-image:radial-gradient(rgba(0,0,0,.035) 1px,transparent 1px);background-size:14px 14px}
+.wa-day{align-self:center;background:var(--waIn);color:var(--waMute);font-size:12.5px;padding:4px 10px;border-radius:8px;margin:4px 0}
+.m{max-width:84%;padding:7px 9px 5px;border-radius:9px;box-shadow:0 1px .5px rgba(0,0,0,.13);font-size:16px;line-height:1.38;position:relative}
+.m.in{background:var(--waIn);align-self:flex-start;border-top-left-radius:2px}
+.m.out{background:var(--waOut);align-self:flex-end;border-top-right-radius:2px}
+.m .t{display:block;text-align:right;font-size:11.5px;color:var(--waMute);margin-top:2px;white-space:nowrap}
+.m.out .t::after{content:" ✓✓";color:#53bdeb}
+.m img{display:block;width:220px;max-width:100%;border-radius:6px;margin-bottom:4px}
+.m .big{font-size:34px;line-height:1}
+.m.urgent{background:light-dark(#ffe1dc,#5a1f1a)}
+.qr{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.qr button{min-height:38px;border-radius:18px;border:1px solid var(--waBtn);color:var(--waBtn);background:transparent;padding:4px 14px;font-weight:600;font-size:15px}
+.voice{display:flex;align-items:center;gap:8px;min-width:190px}
+.voice .pl{width:30px;height:30px;border-radius:50%;background:var(--waBtn);color:#fff;display:grid;place-items:center;font-size:12px;flex:none}
+.voice .wv{flex:1;height:22px;background:repeating-linear-gradient(90deg,var(--waMute) 0 2px,transparent 2px 5px);mask:linear-gradient(90deg,#000 0 100%);opacity:.6;border-radius:2px;clip-path:polygon(0 40%,8% 10%,16% 55%,24% 0,32% 45%,40% 20%,48% 60%,56% 5%,64% 50%,72% 25%,80% 70%,88% 30%,100% 50%,100% 100%,0 100%)}
+.voice+.tr{font-size:13.5px;color:var(--waMute);font-style:italic;margin-top:4px}
+.typing{color:var(--waMute);font-style:italic;font-size:14px}
+.wa-bar{display:flex;gap:8px;align-items:center;padding:8px;background:var(--waBar)}
+.wa-bar input{flex:1;min-height:44px;border:0;border-radius:22px;padding:0 16px;background:var(--waIn);color:var(--waInk);font-size:16px}
+.wa-ic{width:46px;height:46px;min-height:46px;border-radius:50%;border:0;padding:0;display:grid;place-items:center;background:transparent;color:var(--waMute);flex:none}
+.wa-mic{background:var(--waBtn);color:#fff}
+.wa-mic.on{background:#e53935;animation:pulse 1s infinite}
+@keyframes pulse{50%{transform:scale(1.08)}}
+.side h2:first-child{margin-top:0}
+.ctrl{display:grid;gap:8px}
+.ctrl button{text-align:left;font-weight:700}
+.noted{display:grid;gap:8px;max-height:430px;overflow-y:auto}
+.note{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:12px;padding:10px 12px;font-size:15px}
+.note.red{border-left-color:var(--red)}.note.amber{border-left-color:var(--sun)}.note.ok{border-left-color:var(--ok)}
+.note time{color:var(--mute);font-size:13px;margin-right:6px}
+
+/* Family */
+.status{border-radius:24px;padding:22px;margin-bottom:18px}
+.status.red{background:var(--redBg)}.status.amber{background:var(--sunBg)}.status.ok{background:var(--okBg)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px}
+.kpi span{color:var(--mute);font-size:14px}
+.kpi b{display:block;font-size:clamp(24px,3.4vw,32px);line-height:1.1;white-space:nowrap}
+.alerts{display:grid;gap:8px}
+.alert{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 14px;border-radius:14px;background:var(--card);border:1px solid var(--line)}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--mute)}.dot.red{background:var(--red)}.dot.amber{background:var(--sun)}
+.alert time{color:var(--mute);font-size:14px;white-space:nowrap}
+.grid2{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px}
+.bars{display:grid;gap:8px}
+.bar{display:grid;grid-template-columns:64px minmax(0,1fr) 48px 58px;gap:10px;align-items:center;font-size:15px}
+.bar .tr{height:18px;border-radius:9px;background:var(--line);overflow:hidden}
+.bar .fl{height:100%;background:var(--ok);border-radius:9px}.bar .fl.mid{background:var(--sun)}.bar .fl.low{background:var(--red)}
+.bar span:nth-child(3),.bar span:nth-child(4){text-align:right;white-space:nowrap}
+.refill{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 14px;border-radius:14px;background:var(--card);border:1px solid var(--line);margin-top:8px}
+.refill.low{background:var(--sunBg);border-color:transparent}
+.ai{white-space:pre-wrap;background:var(--sunBg);border-radius:16px;padding:14px 16px;margin-top:10px}
+input[type=text],input[type=password],select{width:100%;min-height:48px;border:1px solid var(--line);border-radius:14px;padding:10px 14px;background:var(--bg);font-size:16px}
+
+/* Doctor */
+.memo{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:clamp(18px,4vw,40px)}
+table{width:100%;border-collapse:collapse;margin:8px 0 18px}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+td.n{text-align:right;white-space:nowrap}
+
+dialog{border:0;border-radius:22px;padding:22px;max-width:460px;width:92vw;background:var(--card);color:var(--ink)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+label{display:block;font-weight:700;margin:12px 0 4px}
+.chk{display:flex;gap:8px;align-items:center;font-weight:400}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:14px;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90vw;z-index:20}
+#toast.show{opacity:1}
+.demo{font-size:13px;color:var(--mute);margin-top:30px}
+@media(prefers-reduced-motion:reduce){#toast{transition:none}.wa-mic.on{animation:none}}
+@media(max-width:860px){.stage{grid-template-columns:minmax(0,1fr)}.phone{margin:0 auto}}
+@media(max-width:700px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){table{font-size:14px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;color:var(--mute)}.stack td:empty{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><i></i>Saathi</div>
+  <nav>
+    <a href="#amma" data-v="amma">Amma's phone</a>
+    <a href="#family" data-v="family">Family</a>
+    <a href="#doctor" data-v="doctor">Doctor</a>
+  </nav>
+  <button class="gear" id="gear" aria-label="Settings">Settings</button>
+</header>
+<main id="app"></main>
+<input type="file" id="photoFile" accept="image/*" hidden>
+
+<dialog id="settings">
+  <h2 style="margin-top:0">Settings</h2>
+  <label for="sKey">Claude API key</label>
+  <input type="password" id="sKey" placeholder="Optional — blank uses the server key">
+  <label for="sModel">Model</label>
+  <input type="text" id="sModel">
+  <label for="sLang">Amma's voice language</label>
+  <select id="sLang"><option value="kn-IN">Kannada</option><option value="hi-IN">Hindi</option><option value="en-IN">English (India)</option></select>
+  <label class="chk"><input type="checkbox" id="sSpeak"> Read Saathi's replies aloud</label>
+  <div class="row" style="margin-top:20px">
+    <button class="primary" id="sSave">Save</button>
+    <button id="sReset">Reset demo data</button>
+    <button id="sClose">Close</button>
+  </div>
+  <p class="muted" style="font-size:14px">The key stays in this browser. Optional. Leave blank to use the server (ANTHROPIC_API_KEY). Sample replies are used only if AI is unreachable.</p>
+</dialog>
+<div id="toast" role="status"></div>
+
+<script>
+{
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const dkey=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const ago=n=>{const d=new Date();d.setDate(d.getDate()-n);return dkey(d)};
+const today=()=>dkey(new Date());
+const toMin=t=>{const[h,m]=t.split(':').map(Number);return h*60+m};
+const nowMin=()=>{const d=new Date();return d.getHours()*60+d.getMinutes()};
+const hhmm=()=>{const d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())};
+const shift=(t,n)=>{const m=toMin(t)+n;return pad(Math.floor(m/60)%24)+':'+pad(m%60)};
+const dayLabel=k=>new Date(k+'T12:00').toLocaleDateString('en-IN',{weekday:'short',day:'numeric'});
+
+const P={name:'Lakshmi',call:'Amma',age:68,city:'Mysuru',child:'Ajay',conds:['Type 2 diabetes','High blood pressure','High cholesterol'],diet:'Vegetarian · low sugar · low salt',walkGoal:30,phone:'+91 90000 00000'};
+const MEDS=[
+ {id:'met-am',name:'Metformin 500 mg',when:'08:00',note:'after breakfast',for:'sugar',look:'white oval tablet, blue-and-silver strip',left:22,perDay:2},
+ {id:'aml',name:'Amlodipine 5 mg',when:'08:00',note:'in the morning',for:'BP',look:'small white round tablet, silver strip',left:4,perDay:1},
+ {id:'met-pm',name:'Metformin 500 mg',when:'20:00',note:'after dinner',for:'sugar',look:'white oval tablet, blue-and-silver strip',left:22,perDay:2},
+ {id:'ato',name:'Atorvastatin 10 mg',when:'21:30',note:'at bedtime',for:'cholesterol',look:'white round tablet, red strip',left:18,perDay:1}];
+
+function seedDays(){
+ const pat=[
+  {t:[1,1,1,0],walk:25,mood:'good',meals:[{t:'09:05',items:'Ragi dosa, coconut chutney',sugar:'low',salt:'medium',verdict:'good',tip:'Good fibre start to the day.'}],ck:[{t:'10:05',text:'Slept well, going to the temple with Shanta',mood:'good',symptoms:[]}]},
+  {t:[1,1,1,1],walk:30,mood:'good',meals:[],ck:[]},
+  {t:[1,0,1,0],walk:10,mood:'low',meals:[{t:'17:30',items:'Mysore pak, coffee with sugar',sugar:'high',salt:'low',verdict:'watch',tip:'Festival sweets — one small piece, then a short walk.'}],ck:[{t:'11:20',text:'Feeling tired, knees paining',mood:'low',symptoms:['tiredness','knee pain']}]},
+  {t:[1,1,1,1],walk:35,mood:'good',meals:[],ck:[]},
+  {t:[1,1,0,0],walk:0,mood:'ok',meals:[],ck:[{t:'09:40',text:'Little dizzy in the morning after getting up',mood:'ok',symptoms:['dizziness on standing']}]},
+  {t:[1,1,1,0],walk:20,mood:'good',meals:[],ck:[]}];
+ const days={};
+ pat.forEach((p,i)=>{const doses={};MEDS.forEach((m,j)=>doses[m.id]=p.t[j]?shift(m.when,8+j*3+i):null);
+  days[ago(6-i)]={doses,walk:p.walk,mood:p.mood,meals:p.meals,checkins:p.ck,sos:[],pills:[],chat:[],notes:[]}});
+ days[today()]={doses:{'met-am':'08:14','aml':null,'met-pm':null,'ato':null},walk:10,mood:null,
+  meals:[{t:'08:40',items:'Idli, sambar, coconut chutney',sugar:'medium',salt:'medium',verdict:'ok',tip:'Fine — 3 idlis max keeps sugar steady.'}],
+  checkins:[],sos:[],pills:[],notes:[{t:'08:14',lvl:'ok',text:'Metformin 500 mg taken (👍 reply)'},{t:'08:42',lvl:'ok',text:'Breakfast: idli, sambar — sugar medium, salt medium'}],
+  chat:[
+   {from:'in',t:'08:00',type:'rem',med:'met-am',text:'🙏 Good morning Amma! Time for your <b>Metformin 500 mg</b> (for sugar) — after breakfast.'},
+   {from:'out',t:'08:14',type:'big',text:'👍'},
+   {from:'in',t:'08:14',text:'Well done Amma! Noted ✅'},
+   {from:'in',t:'08:00',type:'rem',med:'aml',text:'💊 Also your <b>Amlodipine 5 mg</b> (for BP). Reply 👍 once you take it.'},
+   {from:'out',t:'08:40',text:'Breakfast idli sambar chutney'},
+   {from:'in',t:'08:41',text:'Nice choice Amma 😊 Keep it to 3 idlis. Have a good day!'}]};
+ return days;
+}
+let S;
+try{S=JSON.parse(localStorage.getItem('saathi2')||'null')}catch(e){S=null}
+if(!S||!S.days||!S.days[today()])S={days:seedDays(),settings:{key:S?.settings?.key||'',model:'claude-sonnet-5-5',lang:'kn-IN',speak:true},ordered:{}};
+const save=()=>{try{localStorage.setItem('saathi2',JSON.stringify(S))}catch(e){}};
+const day=(k=today())=>S.days[k]||(S.days[k]={doses:{},walk:0,mood:null,meals:[],checkins:[],sos:[],pills:[],chat:[],notes:[]});
+const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2600)};
+const last7=()=>Array.from({length:7},(_,i)=>ago(6-i));
+const medById=id=>MEDS.find(m=>m.id===id);
+const note=(text,lvl='')=>day().notes.unshift({t:hhmm(),lvl,text});
+
+/* ---------- Claude ---------- */
+/* AI routing: 1) your own key in Settings → Claude directly; 2) otherwise the server proxy /api/claude (key kept in server env); 3) if neither is reachable → offline sample reply */
+let AI_MODE='checking';
+async function claude(system,content,json=true){
+ let r;
+ if(S.settings.key){
+  r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':S.settings.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+   body:JSON.stringify({model:S.settings.model,max_tokens:900,system,messages:[{role:'user',content}]})});
+ }else if(AI_MODE==='server'){
+  r=await fetch('api/claude',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({system,content})});
+ }else{toast('AI offline — showing a sample reply');return null}
+ if(!r.ok)throw new Error('Claude '+r.status+': '+(await r.text()).slice(0,140));
+ const j=await r.json();const txt=(j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+ if(!json)return txt.trim();
+ const m=txt.match(/\{[\s\S]*\}/);return JSON.parse(m?m[0]:txt);
+}
+const profileText=()=>`${P.name} ("${P.call}"), ${P.age}, lives alone in ${P.city}. Child: ${P.child} (Bangalore). Conditions: ${P.conds.join(', ')}. Diet: ${P.diet}. Walk goal ${P.walkGoal} min/day. Her medicines: ${MEDS.map(m=>`[${m.id}] ${m.name} at ${m.when} ${m.note}, for ${m.for}, looks like: ${m.look}`).join('; ')}. Taken today: ${JSON.stringify(day().doses)}. Time now ${hhmm()}.`;
+const RULES=`You are Saathi, a warm WhatsApp companion for an elderly parent. Reply in the SAME language and script she used (Kannada, Hindi or English; if unsure, simple English). Max 2 short sentences, simple words, kind, can use one emoji. NEVER diagnose. NEVER change, add or stop medicines or doses — for any doubt say "please ask the doctor" and that ${P.child} will be told. If she mentions chest pain, breathlessness, fainting, a fall, confusion, or low-sugar signs (shaking, sweating), set urgent=true: tell her to sit down, call 108 now, and that ${P.child} is being alerted.`;
+
+/* ---------- logic ---------- */
+function adherence(k){const d=S.days[k];if(!d)return null;const isT=k===today();
+ const due=MEDS.filter(m=>!isT||toMin(m.when)<=nowMin());if(!due.length)return null;
+ return Math.round(100*due.filter(m=>d.doses[m.id]).length/due.length)}
+function alerts(){const d=day(),a=[],n=nowMin();
+ d.sos.forEach(s=>a.push({lvl:'red',t:s.t,msg:`${P.call}: “${s.text}”`}));
+ d.checkins.forEach(c=>{if(!c.urgent&&c.symptoms&&c.symptoms.length)a.push({lvl:'amber',t:c.t,msg:`Mentioned ${c.symptoms.join(', ')}`})});
+ MEDS.forEach(m=>{if(!d.doses[m.id]&&n>toMin(m.when)+60)a.push({lvl:'amber',t:m.when,msg:`No 👍 for ${m.name} (${m.for})`})});
+ d.pills.forEach(p=>{if(p.wrong)a.push({lvl:'amber',t:p.t,msg:`Tablet mix-up caught: ${p.text}`})});
+ d.meals.forEach(ml=>{if(ml.verdict==='watch')a.push({lvl:'amber',t:ml.t,msg:`${ml.sugar==='high'?'High-sugar':'High-salt'} meal: ${ml.items}`})});
+ if(!d.checkins.length&&n>toMin('12:00'))a.push({lvl:'grey',t:'',msg:'No check-in reply yet today'});
+ if(d.walk<P.walkGoal&&n>toMin('18:00'))a.push({lvl:'grey',t:'',msg:`Walked ${d.walk} of ${P.walkGoal} min`});
+ const o={red:0,amber:1,grey:2};return a.sort((x,y)=>o[x.lvl]-o[y.lvl])}
+function digest(){return JSON.stringify({profile:profileText(),days:last7().map(k=>{const{chat,...r}=S.days[k]||{};return{date:k,...r}})})}
+
+/* ---------- offline sample replies ---------- */
+const SYMS=[['chest','chest pain',1],['breath','breathlessness',1],['fell','a fall',1],['faint','fainting',1],['help','asked for help',1],['shaking','shakiness',1],['sweat','sweating',1],['dizz','dizziness'],['chakkar','dizziness'],['tale suttu','dizziness'],['tired','tiredness'],['thakan','tiredness'],['fever','fever'],['jwara','fever'],['knee','knee pain'],['headache','headache'],['not well','feeling unwell']];
+function mockText(text){const l=' '+text.toLowerCase()+' ';const hit=SYMS.filter(s=>l.includes(s[0]));
+ const urgent=hit.some(s=>s[2]);const symptoms=[...new Set(hit.map(s=>s[1]))];
+ const took=/👍|tablet|medicine|took|taken|maatre|dawai|goli|tegedu|done/.test(l)?MEDS.filter(m=>!day().doses[m.id]&&toMin(m.when)<=nowMin()).map(m=>m.id):[];
+ const walked=+((l.match(/(\d+)\s*(min|minute|nimisha)/)||[])[1]||0)||(/walk|nade|walked/.test(l)?20:0);
+ const food=/what.*eat|eat what|enu tinli|kya khau|dinner|lunch idea/.test(l);
+ const reply=urgent?`Please sit down right now, ${P.call}. Call 108 if it gets worse — I have alerted ${P.child} 🙏`
+  :food?`Try 1 chapati or a small cup of rice with dal, a big bowl of palya and curd 🥗 Skip sweets today, ${P.call}.`
+  :symptoms.length?`Sorry you're feeling ${symptoms.join(' and ')}, ${P.call}. Rest and drink water — I've told ${P.child}.`
+  :took.length?`Very good, ${P.call}! Noted ✅ Don't forget your evening walk.`
+  :walked?`Wonderful, ${walked} minutes of walking! 👏`
+  :`Nice to hear from you, ${P.call} 😊 Have you taken your tablets and had a short walk today?`;
+ return {reply,mood:symptoms.length?'low':'good',symptoms,took_meds:took,walk_minutes:walked,urgent,note_for_family:symptoms.length?`Mentioned ${symptoms.join(', ')}`:''}}
+let mockFlip=0;
+function mockPhoto(){mockFlip++;
+ if(mockFlip%2)return {kind:'medicine',label_read:'Amlodipine Besylate 5 mg',med_id:'aml',due_now:!day().doses.aml,reply:`Yes ${P.call}, this is your BP tablet (Amlodipine 5 mg). Take 1 now and send 👍`};
+ return {kind:'meal',items:'Rice, sambar, beans palya, curd',sugar:'medium',salt:'medium',verdict:'ok',reply:`Good lunch, ${P.call} 😊 Next time half the rice and more palya — keeps sugar steady.`}}
+function mockSummary(){const a=alerts(),d=day();const taken=MEDS.filter(m=>d.doses[m.id]).length;
+ const ato=report().meds.find(m=>m.id==='ato');const imp=a.filter(x=>x.lvl!=='grey');
+ return `• Today: ${taken}/${MEDS.length} tablets confirmed, walked ${d.walk} min, ${d.checkins.length?'replied to check-in':'no check-in reply yet'}.\n• ${imp.length?'Needs attention: '+imp.map(x=>x.msg).join('; '):'Nothing urgent today.'}\n• This week: bedtime Atorvastatin missed ${ato.due-ato.tk} of ${ato.due} nights — ask the doctor if it can move to after dinner.\n• Call opener: “Did you take your BP tablet this morning? How are the knees?”`}
+function report(){const ks=last7();
+ const meds=MEDS.map(m=>{let due=0,tk=0;ks.forEach(k=>{const d=S.days[k];if(!d)return;if(k===today()&&toMin(m.when)>nowMin())return;due++;if(d.doses[m.id])tk++});return {...m,due,tk,pct:due?Math.round(100*tk/due):0}});
+ const syms=[];ks.forEach(k=>(S.days[k]?.checkins||[]).forEach(c=>c.symptoms?.length&&syms.push({k,...c})));
+ const meals=[];ks.forEach(k=>(S.days[k]?.meals||[]).forEach(m=>m.verdict==='watch'&&meals.push({k,...m})));
+ const walks=ks.map(k=>S.days[k]?.walk||0);
+ return {meds,syms,meals,walkAvg:Math.round(walks.reduce((a,b)=>a+b,0)/7)}}
+function mockDoctor(){const r=report();
+ return `Patient ${P.name}, ${P.age}. Week ${dayLabel(last7()[0])}–${dayLabel(today())}.\nAdherence: ${r.meds.map(m=>`${m.name} (${m.when}) ${m.pct}%`).join('; ')}. Lowest is the bedtime dose.\nReported: ${r.syms.map(s=>`${s.symptoms.join(', ')} (${dayLabel(s.k)})`).join('; ')||'no symptoms'}.\nActivity: average ${r.walkAvg} min walking/day (goal ${P.walkGoal}). Diet flags: ${r.meals.map(m=>m.items).join('; ')||'none'}.\nQuestions: 1) Can Atorvastatin move to after dinner to improve adherence? 2) Any check needed for the morning dizziness?\n(Family-reported log, not a diagnosis.)`}
+
+/* ---------- views ---------- */
+const MIC='<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v7a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-2.1A7 7 0 0 0 19 12z"/></svg>';
+const CLIP='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.5l-8.5 8.5a5 5 0 0 1-7-7L14 5.5a3.5 3.5 0 0 1 5 5L10.5 19a2 2 0 0 1-3-3L15 8.5"/></svg>';
+const SEND='<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l18-8L3 4v6l12 2-12 2z"/></svg>';
+function bubble(m){const d=day();
+ if(m.type==='typing')return `<div class="m in"><span class="typing">Saathi is typing…</span></div>`;
+ let body=m.type==='big'?`<span class="big">${esc(m.text)}</span>`
+  :m.type==='img'?`<img src="${m.img}" alt="Photo Amma sent">${m.text?esc(m.text):''}`
+  :m.type==='voice'?`<div class="voice"><span class="pl">▶</span><span class="wv"></span><small>0:0${Math.min(9,Math.max(2,Math.round((m.text||'').length/12)))}</small></div><div class="tr">“${esc(m.text)}”</div>`
+  :m.from==='in'?m.text:esc(m.text);
+ if(m.type==='rem'&&!d.doses[m.med])body+=`<div class="qr"><button data-taken="${m.med}">👍 Taken</button><button data-later="${m.med}">Later</button></div>`;
+ return `<div class="m ${m.from}${m.urgent?' urgent':''}">${body}<span class="t">${m.t}</span></div>`}
+function vAmma(){const d=day();
+ return `<div class="stage">
+ <div class="phone" aria-label="Amma's WhatsApp">
+  <div class="wa-top"><span class="wa-av">S</span><div><b>Saathi 🙏</b><small>online</small></div></div>
+  <div class="wa-chat" id="chat"><div class="wa-day">TODAY</div>${d.chat.map(bubble).join('')}${busy?bubble({type:'typing'}):''}</div>
+  <form class="wa-bar" id="bar"><button type="button" class="wa-ic" id="clip" aria-label="Send photo">${CLIP}</button>
+   <input id="msg" placeholder="Message" autocomplete="off" aria-label="Message">
+   <button type="button" class="wa-ic wa-mic" id="mic" aria-label="Hold to talk">${MIC}</button>
+   <button type="submit" class="wa-ic" aria-label="Send" style="color:var(--waBtn)">${SEND}</button></form>
+ </div>
+ <div class="side">
+  <h2>Demo controls</h2>
+  <div class="ctrl">
+   <button id="cRem">⏰ Send next tablet reminder</button>
+   <button id="cCheck">💬 Saathi asks “How are you today?”</button>
+   <button id="cWalk">🚶 Ask about evening walk</button>
+  </div>
+  <p class="muted" style="font-size:14px">On the phone: tap 👍, type, hold 🎤 to speak (${{'kn-IN':'Kannada','hi-IN':'Hindi','en-IN':'English'}[S.settings.lang]}), or 📎 send a photo of a tablet strip or a meal.</p>
+  <h2>What Saathi noted for ${P.child}</h2>
+  <div class="noted">${d.notes.map(n=>`<div class="note ${n.lvl}"><time>${n.t}</time>${esc(n.text)}</div>`).join('')||'<p class="muted">Nothing yet.</p>'}</div>
+ </div></div>`}
+
+function vFamily(){const d=day(),a=alerts(),red=a.filter(x=>x.lvl==='red'),amb=a.filter(x=>x.lvl==='amber');
+ const lvl=red.length?'red':amb.length?'amber':'ok';
+ const head=red.length?`Call ${P.call} now`:amb.length?`${P.call} needs a nudge: ${amb.length} thing${amb.length>1?'s':''} to check`:`${P.call} is doing well today`;
+ const due=MEDS.filter(m=>toMin(m.when)<=nowMin()),taken=due.filter(m=>d.doses[m.id]).length;
+ const lastCk=d.checkins[d.checkins.length-1];
+ const refills=MEDS.filter((m,i,arr)=>arr.findIndex(x=>x.name===m.name)===i).map(m=>({...m,days:Math.floor(m.left/m.perDay)})).sort((x,y)=>x.days-y.days);
+ return `<div class="status ${lvl}"><h1>${head}</h1><p style="margin:0">${red.length?esc(red[0].msg)+' — Saathi told her to sit down and call 108.':amb.length?amb.map(x=>esc(x.msg)).join(' · '):'Tablets confirmed, checked in, no symptoms reported.'}</p>${red.length?`<p style="margin:8px 0 0"><b>${P.call}: ${P.phone}</b></p>`:''}</div>
+ <div class="kpis">
+  <div class="kpi"><span>Tablets confirmed</span><b>${taken}/${due.length}</b></div>
+  <div class="kpi"><span>Walk today</span><b>${d.walk}<small style="font-size:16px"> / ${P.walkGoal} min</small></b></div>
+  <div class="kpi"><span>Mood</span><b>${lastCk?{good:'Good',ok:'Okay',low:'Low'}[lastCk.mood]||'—':'—'}</b></div>
+  <div class="kpi"><span>Last reply</span><b>${lastCk?lastCk.t:'—'}</b></div>
+ </div>
+ <div class="grid2">
+  <div><h2>Alerts today</h2><div class="alerts">${a.length?a.map(x=>`<div class="alert"><span class="dot ${x.lvl}"></span><span>${esc(x.msg)}</span><time>${x.t||''}</time></div>`).join(''):'<p class="muted">No alerts.</p>'}</div>
+   <h2>Medicine stock</h2>${refills.map(m=>`<div class="refill ${m.days<=5?'low':''}"><div><b>${m.name}</b><br><span class="muted">${m.days} days left · for ${m.for}</span></div>${m.days<=5?(S.ordered[m.name]?'<span class="tag ok">Ordered</span>':`<button class="primary" data-order="${esc(m.name)}">Order refill</button>`):''}</div>`).join('')}
+  </div>
+  <div><h2>Last 7 days</h2><div class="bars">${last7().map(k=>{const p=adherence(k),w=(S.days[k]||{}).walk??0;
+   return `<div class="bar"><span>${k===today()?'Today':dayLabel(k)}</span><div class="tr"><div class="fl ${p==null?'':p<60?'low':p<90?'mid':''}" style="width:${p??0}%"></div></div><span>${p==null?'—':p+'%'}</span><span class="muted">${w} min</span></div>`}).join('')}</div>
+   <p class="muted" style="font-size:14px">Bar = tablets confirmed · right = walking</p>
+   <h2>Message ${P.call} via Saathi</h2>
+   <div class="row" style="margin-top:0"><input type="text" id="nudgeTxt" value="Amma, please take your BP tablet now 🙏" aria-label="Message"><button class="primary" id="nudge">Send</button></div></div>
+ </div>
+ <h2>Saathi's daily brief</h2>
+ <button class="primary" id="brief">Summarise ${P.call}'s day</button><div id="briefOut"></div>`}
+
+function vDoctor(){const r=report();
+ return `<div class="memo"><h1>Weekly report: ${P.name}, ${P.age}</h1>
+ <p class="sub">${dayLabel(last7()[0])} – ${dayLabel(today())} · ${P.city} · ${P.conds.join(', ')}</p>
+ <h2>Medicine adherence</h2>
+ <table class="stack"><thead><tr><th>Medicine</th><th>Time</th><th>For</th><th>Taken</th><th>Adherence</th></tr></thead><tbody>
+ ${r.meds.map(m=>`<tr><td>${m.name}</td><td>${m.when}</td><td>${m.for}</td><td class="n">${m.tk} of ${m.due}</td><td class="n"><span class="tag ${m.pct<70?'red':m.pct<90?'amber':'ok'}">${m.pct}%</span></td></tr>`).join('')}</tbody></table>
+ <h2>Symptoms she reported</h2>
+ <table class="stack"><thead><tr><th>Day</th><th>Time</th><th>What she said</th><th>Flagged</th></tr></thead><tbody>
+ ${r.syms.map(s=>`<tr><td>${dayLabel(s.k)}</td><td>${s.t}</td><td>“${esc(s.text)}”</td><td>${esc(s.symptoms.join(', '))}</td></tr>`).join('')||'<tr><td colspan="4" class="muted">None</td></tr>'}</tbody></table>
+ <h2>Diet and activity</h2>
+ <p>Average walking <b>${r.walkAvg} min/day</b> (goal ${P.walkGoal}). Meals flagged: ${r.meals.map(m=>`${esc(m.items)} (${dayLabel(m.k)})`).join('; ')||'none'}.</p>
+ <h2>Note for the doctor</h2>
+ <div class="row" style="margin-top:0"><button class="primary" id="docAi">Draft with Saathi</button><button id="docCopy">Copy</button></div><div id="docOut"></div>
+ <p class="muted" style="font-size:14px;margin-top:18px">Family-reported log to support the consultation. Saathi does not diagnose or change medicines.</p></div>`}
+
+/* ---------- render ---------- */
+let busy=false;
+const view=()=>['amma','family','doctor'].includes(location.hash.slice(1))?location.hash.slice(1):'amma';
+function render(){const v=view();document.querySelectorAll('nav a').forEach(a=>a.toggleAttribute('aria-current',a.dataset.v===v));
+ const keep=$('#msg')?.value||'';
+ $('#app').innerHTML=(v==='amma'?vAmma():v==='family'?vFamily():vDoctor())+`<p class="demo">Demo persona with sample data · WhatsApp screen is a simulation · ${S.settings.key?'<b>AI: live (your key)</b>':AI_MODE==='server'?'<b>AI: live (Claude via server)</b>':AI_MODE==='checking'?'AI: connecting…':'AI: offline — run the server or add a key in Settings'}</p>`;
+ const c=$('#chat');if(c){c.scrollTop=c.scrollHeight;if($('#msg'))$('#msg').value=keep}}
+window.addEventListener('hashchange',render);
+
+/* ---------- chat actions ---------- */
+function push(m){day().chat.push({t:hhmm(),...m});save();render()}
+function speak(t){if(!S.settings.speak)return;try{const u=new SpeechSynthesisUtterance(t.replace(/<[^>]+>/g,''));u.lang=S.settings.lang;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+function saathiSays(text,extra={}){push({from:'in',text:esc(text),...extra});speak(text)}
+function markTaken(id,how){const d=day();if(d.doses[id])return;d.doses[id]=hhmm();const m=medById(id);if(m.left>0)m.left--;note(`${m.name} taken (${how})`,'ok')}
+
+async function handleText(text,isVoice){
+ push({from:'out',type:isVoice?'voice':'',text});busy=true;render();
+ let r;try{r=await claude(`${RULES}\n${profileText()}\nAlso answer simple questions (e.g. what to eat) with practical Indian home-food ideas that suit her conditions.\nReturn ONLY JSON: {"reply":"","mood":"good|ok|low","symptoms":["short English labels"],"took_meds":["ids she says she took now"],"walk_minutes":0,"urgent":false,"note_for_family":"one short English line or empty"}`,text)}catch(e){toast(e.message);r=null}
+ busy=false;r=r||mockText(text);const d=day();
+ (r.took_meds||[]).forEach(id=>medById(id)&&markTaken(id,isVoice?'said so in a voice note':'said so in chat'));
+ if(r.walk_minutes){d.walk+=+r.walk_minutes;note(`Walked ${r.walk_minutes} min`,'ok')}
+ d.checkins.push({t:hhmm(),text,mood:r.mood,symptoms:r.symptoms||[],urgent:!!r.urgent});d.mood=r.mood;
+ if(r.urgent){d.sos.push({t:hhmm(),text});note(`URGENT — ${r.symptoms?.join(', ')||'unwell'}. Told her to call 108. ${P.child} alerted.`,'red');toast(`🚨 Alert sent to ${P.child}`)}
+ else if(r.symptoms?.length)note(`Mentioned ${r.symptoms.join(', ')}`,'amber');
+ else if(r.note_for_family)note(r.note_for_family);
+ saathiSays(r.reply,r.urgent?{urgent:true}:{})}
+
+async function handlePhoto(file){if(!file)return;
+ const img=await new Promise(res=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,900/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.8))};im.src=fr.result};fr.readAsDataURL(file)});
+ let thumb=img;try{const im=new Image();im.src=img;await im.decode();const c=document.createElement('canvas'),s=Math.min(1,440/im.width);c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);thumb=c.toDataURL('image/jpeg',.7)}catch(e){}
+ push({from:'out',type:'img',img:thumb});busy=true;render();
+ let r;try{r=await claude(`${RULES}\n${profileText()}\nShe sent a photo. Decide if it is her MEDICINE (tablet strip/box) or a MEAL.\nIf medicine: read the label, match it to one of her medicines by name (not just looks). If it matches, say what it is for and whether it is due now (not yet taken today and time has come). If it does NOT match any of her medicines, set wrong=true and tell her NOT to take it and that ${P.child} will check.\nIf meal: name the items, judge sugar and salt for her conditions, give one practical tip.\nReturn ONLY JSON: {"kind":"medicine|meal|other","label_read":"","med_id":"id or null","wrong":false,"due_now":false,"items":"","sugar":"low|medium|high","salt":"low|medium|high","verdict":"good|ok|watch","reply":""}`,
+  [{type:'image',source:{type:'base64',media_type:'image/jpeg',data:img.split(',')[1]}},{type:'text',text:'Is this okay for me?'}])}catch(e){toast(e.message);r=null}
+ busy=false;r=r||mockPhoto();const d=day();
+ if(r.kind==='medicine'){const m=medById(r.med_id);
+  d.pills.push({t:hhmm(),wrong:!!r.wrong,text:r.label_read||'unknown tablet'});
+  note(r.wrong?`Tablet check: “${r.label_read}” is NOT on her list — told her not to take it`:`Tablet check: ${m?m.name:r.label_read}${r.due_now?' — due now, reminded her':''}`,r.wrong?'amber':'');
+  saathiSays(r.reply,m&&r.due_now&&!d.doses[m.id]?{type:'rem',med:m.id}:{})}
+ else if(r.kind==='meal'){d.meals.unshift({t:hhmm(),items:r.items,sugar:r.sugar,salt:r.salt,verdict:r.verdict,tip:r.reply});
+  note(`Meal: ${r.items} — sugar ${r.sugar}, salt ${r.salt}`,r.verdict==='watch'?'amber':'ok');saathiSays(r.reply)}
+ else saathiSays(r.reply||`Thank you ${P.call} 😊`)}
+
+function nextReminder(){const d=day();const pending=new Set(d.chat.filter(m=>m.type==='rem').map(m=>m.med));
+ const m=MEDS.find(x=>!d.doses[x.id]&&!pending.has(x.id))||MEDS.find(x=>!d.doses[x.id]);
+ if(!m){toast('All tablets done for today');return}
+ saathiSays(`💊 ${P.call}, time for your ${m.name} (for ${m.for}) — ${m.note}. Reply 👍 once you take it.`,{type:'rem',med:m.id})}
+
+/* ---------- other actions ---------- */
+let rec=null,listening=false;
+function toggleMic(btn){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SR){toast('Voice needs Chrome — type instead');return}
+ if(listening){rec&&rec.stop();return}
+ rec=new SR();rec.lang=S.settings.lang;rec.interimResults=true;rec.continuous=false;let said='';
+ rec.onresult=ev=>{said=Array.from(ev.results).map(x=>x[0].transcript).join(' ');const i=$('#msg');if(i)i.value=said};
+ rec.onend=()=>{listening=false;$('#mic')?.classList.remove('on');const t=said.trim();if(t){$('#msg').value='';handleText(t,true)}};
+ rec.onerror=ev=>toast('Mic: '+ev.error);
+ try{rec.start();listening=true;btn.classList.add('on');toast('Listening… tap 🎤 again to stop')}catch(e){toast('Mic unavailable')}}
+async function brief(){const o=$('#briefOut');o.innerHTML='<div class="ai">Reading the week…</div>';let t;
+ try{t=await claude(`You brief an adult child (${P.child}) about their parent's day. Plain English, 4 bullet lines starting with "•": today's status, what needs attention, one weekly pattern, one suggested opening line for a phone call. No diagnosis, no medicine changes — suggest asking the doctor instead.`,digest(),false)}catch(e){toast(e.message)}
+ o.innerHTML=`<div class="ai">${esc(t||mockSummary())}</div>`}
+async function docNote(){const o=$('#docOut');o.innerHTML='<div class="ai">Drafting…</div>';let t;
+ try{t=await claude(`Write a concise note (under 140 words) a family member can show a GP: adherence per medicine with %, symptoms with dates, activity, diet flags, and 2 questions for the doctor. Neutral clinical tone, no diagnosis, end with "(Family-reported log, not a diagnosis.)"`,JSON.stringify(report())+digest(),false)}catch(e){toast(e.message)}
+ o.innerHTML=`<div class="ai" id="docTxt">${esc(t||mockDoctor())}</div>`}
+
+document.addEventListener('submit',e=>{if(e.target.id!=='bar')return;e.preventDefault();const i=$('#msg');const t=i.value.trim();if(!t||busy)return;i.value='';handleText(t,false)});
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+ if(b.dataset.taken){push({from:'out',type:'big',text:'👍'});markTaken(b.dataset.taken,'👍 reply');save();saathiSays(`Well done ${P.call}! Noted ✅`);return}
+ if(b.dataset.later){push({from:'out',text:'Later'});saathiSays(`Okay ${P.call}, I'll remind you again in 15 minutes ⏰`);return}
+ if(b.dataset.order){S.ordered[b.dataset.order]=true;save();render();toast('Refill ordered (demo) — Amma will get a WhatsApp when it ships');return}
+ switch(b.id){
+  case 'clip':$('#photoFile').click();break;
+  case 'mic':toggleMic(b);break;
+  case 'cRem':nextReminder();break;
+  case 'cCheck':saathiSays(`🙏 Namaskara ${P.call}! How are you feeling today? You can send me a voice message.`);break;
+  case 'cWalk':saathiSays(`🌇 ${P.call}, did you go for your evening walk today? How many minutes?`);break;
+  case 'nudge':{const t=$('#nudgeTxt').value.trim();if(t){day().chat.push({from:'in',t:hhmm(),text:`<b>From ${esc(P.child)}:</b> ${esc(t)}`});note(`${P.child} sent: ${t}`);save();toast(`Sent to ${P.call}'s WhatsApp`)}break}
+  case 'brief':brief();break;
+  case 'docAi':docNote();break;
+  case 'docCopy':{const t=$('#docTxt')?.textContent||mockDoctor();navigator.clipboard.writeText(t).then(()=>toast('Copied'),()=>toast('Copy blocked — select the text'));break}
+  case 'gear':$('#sKey').value=S.settings.key;$('#sModel').value=S.settings.model;$('#sLang').value=S.settings.lang;$('#sSpeak').checked=!!S.settings.speak;$('#settings').showModal();break;
+  case 'sSave':S.settings.key=$('#sKey').value.trim();S.settings.model=$('#sModel').value.trim()||'claude-sonnet-5-5';S.settings.lang=$('#sLang').value;S.settings.speak=$('#sSpeak').checked;save();$('#settings').close();render();toast('Saved');break;
+  case 'sReset':S.days=seedDays();S.ordered={};save();$('#settings').close();render();toast('Demo data reset');break;
+  case 'sClose':$('#settings').close();break}
+});
+$('#photoFile').addEventListener('change',e=>{handlePhoto(e.target.files[0]);e.target.value=''});
+fetch('api/claude').then(r=>r.ok?r.json():null).then(j=>{AI_MODE=j&&j.ok?'server':'offline'}).catch(()=>{AI_MODE='offline'}).finally(render);
+setInterval(()=>{if(view()!=='amma'&&!['INPUT','TEXTAREA'].includes(document.activeElement?.tagName))render()},60000);
+render();
+}
+</script>
+</body>
+</html>

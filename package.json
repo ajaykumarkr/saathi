@@ -1,0 +1,8 @@
+{
+  "name": "saathi",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Saathi — an AI companion on WhatsApp that helps elderly parents with medicines, meals and check-ins, and keeps their children informed.",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}
