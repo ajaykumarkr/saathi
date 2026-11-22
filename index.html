@@ -308,6 +308,7 @@ function alerts(m=M()){const d=day(today(),m),a=[],n=nowMin();
  m.meds.forEach(x=>{if(!d.doses[x.id]&&n>toMin(x.when)+60)a.push({lvl:'amber',t:x.when,msg:`No 👍 for ${x.name} (${x.for})`})});
  d.pills.forEach(p=>{if(p.wrong)a.push({lvl:'amber',t:p.t,msg:`Tablet mix-up caught: ${p.text}`})});
  d.meals.forEach(ml=>{if(ml.verdict==='poor')a.push({lvl:'amber',t:ml.t,msg:`Poor ${ml.slot}: ${ml.items}`})});
+ if(m.pending&&m.pending.from&&m.pending.from!=='you')a.push({lvl:'amber',t:'',msg:`Review the ${m.pending.type||'document'} ${m.pending.from} sent (Health record)`});
  m.tasks.filter(t=>!t.booked&&daysTo(t.due)<0).forEach(t=>a.push({lvl:'amber',t:'',msg:`Overdue: ${t.what}`}));
  const o={red:0,amber:1,grey:2};return a.sort((x,y)=>o[x.lvl]-o[y.lvl])}
 function weekStats(m=M()){const ks=last7();
@@ -340,7 +341,8 @@ function mockText(text){const l=' '+text.toLowerCase()+' ',m=M(),d=day();const h
  return {reply,mood:symptoms.length?'low':'good',symptoms,took_meds:took,walk_minutes:0,urgent,meal,note_for_family:''}}
 let flip=0;
 function mockPhoto(){flip++;const m=M(),x=m.meds[0];
- if(flip%2)return {kind:'medicine',label_read:x?x.name:'tablet',med_id:x?.id||null,wrong:false,due_now:x&&!day().doses[x.id],reply:x?`Yes, this is ${x.name} (for ${x.for}). ${day().doses[x.id]?'Already taken today ✅':'Take 1 now, '+x.note+', and send 👍'}`:'I can see a tablet strip.'};
+ if(flip%3===0)return {kind:'document',reply:`Thank you! Reading it now — I'll send it to ${CH()} to check 🙏`};
+ if(flip%3===1)return {kind:'medicine',label_read:x?x.name:'tablet',med_id:x?.id||null,wrong:false,due_now:x&&!day().doses[x.id],reply:x?`Yes, this is ${x.name} (for ${x.for}). ${day().doses[x.id]?'Already taken today ✅':'Take 1 now, '+x.note+', and send 👍'}`:'I can see a tablet strip.'};
  return {kind:'meal',meal:{slot:slotNow(),items:'Rice, sambar, beans palya, curd',verdict:'okay',followed:['Half plate vegetables','Protein each meal'],broke:['Rice max 1 small cup'],tip:'Half the rice, double the palya.'},reply:'Good lunch 😊 Next time half the rice and more palya — keeps sugar steady.'}}
 function mockBrief(scope){const m=M(),w=weekStats(),d=day(),a=alerts().filter(x=>x.lvl!=='grey');
  const topB=Object.entries(w.broke).sort((x,y)=>y[1]-x[1])[0];
@@ -385,7 +387,7 @@ function vPhone(){const m=M(),d=day();
    <button data-sched="ask">❓ ${esc(addressee())} asks “Which tablet now?”</button>
   </div>
   <label class="chk small" style="margin-top:10px"><input type="checkbox" id="asVoice" ${S.settings.asVoice?'checked':''}> Send Saathi's messages as voice notes (${LANGS[m.lang]||'English'})</label>
-  <p class="muted small">On the phone: tap 👍, type, tap 🎤 to speak, or 📎 send a photo of a tablet strip or a meal.</p>
+  <p class="muted small">On the phone: tap 👍, type, tap 🎤 to speak, or 📎 send a photo of a tablet strip, a meal, or a prescription / lab report.</p>
   <h2>What Saathi noted for ${esc(CH())}</h2>
   <div class="noted">${d.notes.map(n=>`<div class="note ${n.lvl}"><time>${n.t}</time>${esc(n.text)}</div>`).join('')||'<p class="muted">Nothing yet.</p>'}</div>
  </div></div>`}
@@ -475,9 +477,8 @@ function vSummary(){if(sumWho==='all'||!S.members.some(x=>x.id===sumWho))return 
  <h2>Message ${esc(addressee())} via Saathi</h2>
  <div class="row" style="margin-top:0"><input type="text" id="nudgeTxt" value="${esc(isCare()?`Manju, please check ${m.call}'s BP this evening and send me the reading 🙏`:'Amma, please take your BP tablet now 🙏')}" aria-label="Message"><button class="primary" id="nudge">Send</button></div>`}
 
-let pendingDoc=null;
 function foundCard(r){const m=M();
- return `<div class="found"><b>Saathi read a ${esc(r.type||'document')}</b>${r.doctor?` from ${esc(r.doctor)}`:''}${r.date?` · ${esc(fmtD(r.date))}`:''}${r.img?`<img src="${r.img}" alt="Scanned document" style="display:block;max-width:220px;border-radius:8px;margin:8px 0">`:''}
+ return `<div class="found"><b>Saathi read a ${esc(r.type||'document')}</b>${r.from&&r.from!=='you'?` <span class="tag amber">sent by ${esc(r.from)} on WhatsApp</span>`:''}${r.doctor?` from ${esc(r.doctor)}`:''}${r.date?` · ${esc(fmtD(r.date))}`:''}${r.img?`<img src="${r.img}" alt="Scanned document" style="display:block;max-width:220px;border-radius:8px;margin:8px 0">`:''}
  ${r.meds?.length?`<p style="margin:8px 0 0"><b>Medicines</b> (will replace the current list)</p><ul>${r.meds.map(x=>`<li>${esc(x.name)} — ${esc(x.when)} ${esc(x.note||'')} ${x.for?'· for '+esc(x.for):''}${m.meds.some(y=>y.name.toLowerCase()===String(x.name).toLowerCase())?'':' <span class="tag amber">new</span>'}</li>`).join('')}</ul>`:''}
  ${m.meds.filter(y=>r.meds?.length&&!r.meds.some(x=>String(x.name).toLowerCase()===y.name.toLowerCase())).map(y=>`<p class="small danger" style="margin:0">Not on new prescription: ${esc(y.name)} (would be stopped)</p>`).join('')}
  ${r.tests?.length?`<p style="margin:8px 0 0"><b>Test results</b></p><ul>${r.tests.map(x=>`<li>${esc(x.name)}: <b>${esc(x.value)}</b> (normal ${esc(x.ref||'—')}) ${x.flag&&x.flag!=='normal'?`<span class="tag red">${esc(x.flag)}</span>`:''}</li>`).join('')}</ul>`:''}
@@ -491,12 +492,13 @@ function mockDoc(){return {type:'prescription',doctor:'Dr. Suresh Rao',date:toda
  tests:[{name:'HbA1c',value:'7.1 %',ref:'below 7.0',flag:'high'},{name:'Vitamin D',value:'18 ng/mL',ref:'30–100',flag:'low'}],
  advice:['Walk 30 min after dinner','No sweets'],next_visit:{what:'Diabetes review with Dr. Suresh Rao',date:inDays(90)},summary:'Atorvastatin moved to after dinner; weekly Vitamin D added.'}}
 async function scanDoc(file){if(!file)return;const o=$('#scanOut');o.innerHTML='<div class="found">Reading the document…</div>';
- const img=await new Promise(res=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.85))};im.src=fr.result};fr.readAsDataURL(file)});
- let r=null;try{r=await claude(`You read Indian prescriptions and lab reports (printed or handwritten) for a family health record. Patient context:\n${profileText()}\nExtract only what is clearly written; never guess doses. Times: convert OD/BD/TDS, morning/after food etc. into HH:MM using 08:00 breakfast, 13:30 lunch, 20:00 dinner, 21:30 bedtime. Today is ${today()}.\nReturn ONLY JSON: {"type":"prescription|lab report|other","doctor":"","date":"YYYY-MM-DD or empty","meds":[{"name":"name + strength","when":"HH:MM","for":"plain-English purpose","note":"how to take"}],"tests":[{"name":"","value":"with unit","ref":"normal range","flag":"normal|high|low"}],"advice":["short diet/lifestyle rules written by the doctor"],"next_visit":null or {"what":"","date":"YYYY-MM-DD"},"summary":"one line: what changed vs the current medicines"}. One entry per dose time (a BD medicine = two entries).`,
+ const img=await readImg(file,1600);await extractDoc(img,'you');render()}
+function readImg(file,max){return new Promise(res=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.85))};im.src=fr.result};fr.readAsDataURL(file)})}
+async function extractDoc(img,from){const m=M();let r=null;try{r=await claude(`You read Indian prescriptions and lab reports (printed or handwritten) for a family health record. Patient context:\n${profileText()}\nExtract only what is clearly written; never guess doses. Times: convert OD/BD/TDS, morning/after food etc. into HH:MM using 08:00 breakfast, 13:30 lunch, 20:00 dinner, 21:30 bedtime. Today is ${today()}.\nReturn ONLY JSON: {"type":"prescription|lab report|other","doctor":"","date":"YYYY-MM-DD or empty","meds":[{"name":"name + strength","when":"HH:MM","for":"plain-English purpose","note":"how to take"}],"tests":[{"name":"","value":"with unit","ref":"normal range","flag":"normal|high|low"}],"advice":["short diet/lifestyle rules written by the doctor"],"next_visit":null or {"what":"","date":"YYYY-MM-DD"},"summary":"one line: what changed vs the current medicines"}. One entry per dose time (a BD medicine = two entries).`,
   [{type:'image',source:{type:'base64',media_type:'image/jpeg',data:img.split(',')[1]}},{type:'text',text:'Read this document.'}])}catch(e){toast(e.message)}
  r=r||mockDoc();let thumb=img;try{const im=new Image();im.src=img;await im.decode();const c=document.createElement('canvas'),s=Math.min(1,440/im.width);c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);thumb=c.toDataURL('image/jpeg',.7)}catch(e){}
- pendingDoc={...r,img:thumb};render()}
-function applyDoc(){const m=M(),r=pendingDoc;if(!r)return;const dt=/^\d{4}-\d{2}-\d{2}$/.test(r.date||'')?r.date:today();
+ m.pending={...r,img:thumb,from};save()}
+function applyDoc(){const m=M(),r=m.pending;if(!r)return;const dt=/^\d{4}-\d{2}-\d{2}$/.test(r.date||'')?r.date:today();
  if(r.meds?.length){const old=m.meds;m.meds=r.meds.map(x=>{const prev=old.find(o=>o.name.toLowerCase()===String(x.name).toLowerCase()&&o.when===x.when)||old.find(o=>o.name.toLowerCase()===String(x.name).toLowerCase());
   return {id:prev&&prev.when===x.when?prev.id:'x'+uid(),name:x.name,when:/^\d{1,2}:\d{2}$/.test(x.when)?x.when.padStart(5,'0'):'08:00',for:x.for||'',note:x.note||'',look:prev?.look||'',left:prev?.left??30,perDay:prev?.perDay||1}})}
  (r.tests||[]).forEach(x=>m.reports.push({id:uid(),date:dt,name:x.name,value:x.value,ref:x.ref||'',flag:x.flag||'normal'}));
@@ -506,13 +508,13 @@ function applyDoc(){const m=M(),r=pendingDoc;if(!r)return;const dt=/^\d{4}-\d{2}
  m.tasks=m.tasks.filter(t=>!(r.type==='prescription'&&/review with/i.test(t.what)&&r.doctor&&t.what.includes(r.doctor)&&daysTo(t.due)<30&&!t.booked));
  day().notes.unshift({t:hhmm(),lvl:'ok',text:`${CH()} approved ${r.type} from ${r.doctor||'doctor'} — record updated`});
  if(r.meds?.length)day().chat.push({from:'in',t:hhmm(),text:`📝 ${esc(addressee())}, your tablets were updated after the doctor visit: ${r.meds.map(x=>esc(x.name)+' at '+esc(x.when)).join(', ')}. I'll remind you at the new times 🙏`});
- pendingDoc=null;save();render();toast('Record updated')}
+ m.pending=null;save();render();toast('Record updated')}
 function vRecord(){const m=M(),w=weekStats();
  const up=[...m.tasks].filter(t=>!t.booked||daysTo(t.booked)>=0).sort((x,y)=>(x.booked||x.due).localeCompare(y.booked||y.due));
  return `<div class="row noprint" style="margin:0 0 16px"><label class="small" for="shareTo" style="margin:0">Share with</label><select id="shareTo" style="width:auto;min-width:220px">${m.doctors.map(x=>`<option value="${esc(x.email)}">${esc(x.name)} · ${esc(x.spec)}</option>`).join('')}<option value="">Other (enter in email)</option></select>
   <button class="primary" id="emailRec">Email record</button><button id="printRec">Download PDF / Print</button><button id="copyRec">Copy as text</button></div>
  <div class="scan noprint"><h3>📷 Scan a prescription or lab report</h3><p class="small" style="margin:0">Take a photo after a doctor visit. Saathi reads it and suggests updates; nothing changes until you approve.</p>
-  <div class="row"><button class="primary" id="scanDoc">Scan photo</button>${pendingDoc?'':''}</div><div id="scanOut">${pendingDoc?foundCard(pendingDoc):''}</div></div>
+  <div class="row"><button class="primary" id="scanDoc">Scan photo</button></div><div id="scanOut">${M().pending?foundCard(M().pending):''}</div></div>
  <div class="memo">
  <p class="printonly small">Saathi health record · printed ${fmtD(today())}</p>
  <h1>${esc(m.name)}, ${esc(m.age)}</h1>
@@ -621,7 +623,10 @@ async function handlePhoto(file){if(!file)return;
   d.pills.push({t:hhmm(),wrong:!!r.wrong,text:r.label_read||'unknown tablet'});
   note(r.wrong?`Tablet check: “${r.label_read}” is NOT on the list — told not to take it`:`Tablet check: ${x?x.name:r.label_read}${r.due_now?' — due now':''}`,r.wrong?'amber':'');
   saathiSays(r.reply,x&&r.due_now&&!d.doses[x.id]?{type:'rem',med:x.id}:{})}
- else if(r.kind==='document'){note(`${addressee()} sent a prescription/report photo — review in Health record`,'amber');pendingDoc=null;saathiSays(r.reply||`Thank you! I've sent this to ${CH()} to review 🙏`)}
+ else if(r.kind==='document'){saathiSays(r.reply||`Thank you! Reading it now — I'll send it to ${CH()} to check 🙏`);busy=true;render();
+  await extractDoc(img,addressee());busy=false;const pd=M().pending;
+  note(`${addressee()} sent a ${pd?.type||'document'}${pd?.doctor?' from '+pd.doctor:''} — waiting for ${CH()} to approve in Health record`,'amber');
+  saathiSays(pd?.type==='lab report'?`Got your report ✅ ${CH()} will check it and share it with the doctor.`:`Got the prescription ✅ ${CH()} will check it, then I'll update your tablet reminders.`)}
  else if(r.kind==='meal'||r.meal){logMeal(r.meal,thumb);saathiSays(r.reply)}
  else saathiSays(r.reply||'Thank you 😊')}
 
@@ -689,7 +694,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
   case 'brief':brief();break;
   case 'scanDoc':$('#docFile').click();break;
   case 'applyDoc':applyDoc();break;
-  case 'dropDoc':pendingDoc=null;render();break;
+  case 'dropDoc':M().pending=null;save();render();break;
   case 'famBrief':famBrief();break;
   case 'docAi':docNote();break;
   case 'emailRec':{const to=$('#shareTo').value;location.href=`mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(`Health summary — ${m.name}, ${m.age}`)}&body=${encodeURIComponent(($('#docTxt')?.textContent?$('#docTxt').textContent+'\n\n':'')+recordText())}`;break}

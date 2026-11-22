@@ -34,6 +34,7 @@ Saathi works for any family member (Amma, Appa, Ajji…). Messages go either to 
 - **"Which tablet now?"**: Saathi answers from the prescribed schedule and what's already been taken, so the parent doesn't have to call their child in the middle of a meeting.
 - **"What did you eat?"**: a scheduled question; the reply can be a photo or a voice note. Claude judges the meal against the doctor's diet rules (good / okay / poor, which rules were kept or broken, one tip).
 - **Tablet-strip photo check:** Claude reads the label and matches it to the prescription; a medicine that isn't on the list is flagged and the parent is told not to take it.
+- **Send a prescription or lab report** as a photo: Claude reads it and the child gets a review card; once approved, the record and the tablet reminders update.
 - **Appointment and test reminders**, including fasting instructions.
 - **Daily check-ins** in Kannada, Hindi, Tamil, Telugu or English, by text or voice; replies can be sent as voice notes.
 - **Red flags** (chest pain, a fall, breathlessness, low-sugar signs) trigger "sit down and call 108" and an immediate family alert.
