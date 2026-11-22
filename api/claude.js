@@ -18,7 +18,7 @@ module.exports = async function handler(req, res) {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model: MODEL, max_tokens: 900, system: String(system || '').slice(0, 8000), messages: [{ role: 'user', content }] })
+      body: JSON.stringify({ model: MODEL, max_tokens: Math.min(2000, Math.max(200, Number(body.max_tokens) || 1000)), system: String(system || '').slice(0, 8000), messages: [{ role: 'user', content }] })
     });
     const data = await r.json();
     return send(r.status, data);

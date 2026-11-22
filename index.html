@@ -272,18 +272,19 @@ const addressee=()=>isCare()?M().contact.name:M().call;
 
 /* ---------- Claude ---------- */
 let AI_MODE='checking';
-async function claude(system,content,json=true){
+const offline=()=>!S.settings.key&&AI_MODE!=='server';
+async function claude(system,content,json=true,maxTok=1000){
  let r;
  if(S.settings.key){
   r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':S.settings.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-   body:JSON.stringify({model:S.settings.model,max_tokens:900,system,messages:[{role:'user',content}]})});
+   body:JSON.stringify({model:S.settings.model,max_tokens:maxTok,system,messages:[{role:'user',content}]})});
  }else if(AI_MODE==='server'){
-  r=await fetch('api/claude',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({system,content})});
+  r=await fetch('api/claude',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({system,content,max_tokens:maxTok})});
  }else{toast('AI offline — showing a sample reply');return null}
  if(!r.ok)throw new Error('Claude '+r.status+': '+(await r.text()).slice(0,140));
  const j=await r.json();const txt=(j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
  if(!json)return txt.trim();
- const mm=txt.match(/\{[\s\S]*\}/);return JSON.parse(mm?mm[0]:txt);
+ const mm=txt.match(/\{[\s\S]*\}/);try{return JSON.parse(mm?mm[0]:txt)}catch(e){throw new Error('Could not understand the AI reply'+(j.stop_reason==='max_tokens'?' (too long)':''))}
 }
 function profileText(){const m=M(),d=day();
  return `PATIENT: ${m.name} (called "${m.call}"), ${m.relation} of ${CH()}, age ${m.age}, lives in ${m.city}. Conditions: ${m.conds.join(', ')||'none listed'}. Allergies: ${m.allergies.join(', ')||'none'}. History: ${m.history||'-'}.
@@ -478,13 +479,13 @@ function vSummary(){if(sumWho==='all'||!S.members.some(x=>x.id===sumWho))return 
  <div class="row" style="margin-top:0"><input type="text" id="nudgeTxt" value="${esc(isCare()?`Manju, please check ${m.call}'s BP this evening and send me the reading 🙏`:'Amma, please take your BP tablet now 🙏')}" aria-label="Message"><button class="primary" id="nudge">Send</button></div>`}
 
 function foundCard(r){const m=M();
- return `<div class="found"><b>Saathi read a ${esc(r.type||'document')}</b>${r.from&&r.from!=='you'?` <span class="tag amber">sent by ${esc(r.from)} on WhatsApp</span>`:''}${r.doctor?` from ${esc(r.doctor)}`:''}${r.date?` · ${esc(fmtD(r.date))}`:''}${r.img?`<img src="${r.img}" alt="Scanned document" style="display:block;max-width:220px;border-radius:8px;margin:8px 0">`:''}
- ${r.meds?.length?`<p style="margin:8px 0 0"><b>Medicines</b> (will replace the current list)</p><ul>${r.meds.map(x=>`<li>${esc(x.name)} — ${esc(x.when)} ${esc(x.note||'')} ${x.for?'· for '+esc(x.for):''}${m.meds.some(y=>y.name.toLowerCase()===String(x.name).toLowerCase())?'':' <span class="tag amber">new</span>'}</li>`).join('')}</ul>`:''}
+ return `<div class="found"><b>Saathi read a ${esc(r.type||'document')}</b>${r.from&&r.from!=='you'?` <span class="tag amber">sent by ${esc(r.from)} on WhatsApp</span>`:''}${r.doctor?` from ${esc(r.doctor)}`:''}${r.date?` · ${esc(fmtD(r.date))}`:''}${r.patient_on_document&&!String(r.patient_on_document).toLowerCase().includes(String(m.name).toLowerCase())?`<p class="small danger" style="margin:6px 0 0">Name on document: “${esc(r.patient_on_document)}” — doesn't match ${esc(m.name)}. Check before approving.</p>`:''}${r.img?`<img src="${r.img}" alt="Scanned document" style="display:block;max-width:220px;border-radius:8px;margin:8px 0">`:''}
+ ${r.meds?.length?`<p style="margin:8px 0 0"><b>Medicines</b> (will replace the current list)</p><ul>${r.meds.map(x=>`<li>${esc(x.name)} — ${esc(x.when)} ${esc(x.note||'')} ${x.for?'· for '+esc(x.for):''}${m.meds.some(y=>y.name.toLowerCase()===String(x.name).toLowerCase())?'':' <span class="tag amber">new</span>'}${x.unclear?' <span class="tag red">check — unclear</span>':''}</li>`).join('')}</ul>`:''}
  ${m.meds.filter(y=>r.meds?.length&&!r.meds.some(x=>String(x.name).toLowerCase()===y.name.toLowerCase())).map(y=>`<p class="small danger" style="margin:0">Not on new prescription: ${esc(y.name)} (would be stopped)</p>`).join('')}
  ${r.tests?.length?`<p style="margin:8px 0 0"><b>Test results</b></p><ul>${r.tests.map(x=>`<li>${esc(x.name)}: <b>${esc(x.value)}</b> (normal ${esc(x.ref||'—')}) ${x.flag&&x.flag!=='normal'?`<span class="tag red">${esc(x.flag)}</span>`:''}</li>`).join('')}</ul>`:''}
  ${r.advice?.length?`<p style="margin:8px 0 0"><b>Doctor's advice</b> (added to diet/care rules)</p><ul>${r.advice.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}
  ${r.next_visit?`<p style="margin:8px 0 0"><b>Next visit:</b> ${esc(r.next_visit.what||'Follow-up')} · ${esc(fmtD(r.next_visit.date))}</p>`:''}
- ${r.summary?`<p class="small muted">${esc(r.summary)}</p>`:''}
+ ${r.summary?`<p class="small" style="margin:8px 0 0">${esc(r.summary)}</p>`:''}${!r.meds?.length&&!r.tests?.length?'<p class="small muted">No medicines or test values found.</p>':''}
  <div class="row"><button class="primary" id="applyDoc">Approve and update record</button><button id="dropDoc">Discard</button></div>
  <p class="small muted" style="margin:6px 0 0">Always check against the paper prescription. Saathi never changes medicines on its own.</p></div>`}
 function mockDoc(){return {type:'prescription',doctor:'Dr. Suresh Rao',date:today(),
@@ -492,15 +493,16 @@ function mockDoc(){return {type:'prescription',doctor:'Dr. Suresh Rao',date:toda
  tests:[{name:'HbA1c',value:'7.1 %',ref:'below 7.0',flag:'high'},{name:'Vitamin D',value:'18 ng/mL',ref:'30–100',flag:'low'}],
  advice:['Walk 30 min after dinner','No sweets'],next_visit:{what:'Diabetes review with Dr. Suresh Rao',date:inDays(90)},summary:'Atorvastatin moved to after dinner; weekly Vitamin D added.'}}
 async function scanDoc(file){if(!file)return;const o=$('#scanOut');o.innerHTML='<div class="found">Reading the document…</div>';
- const img=await readImg(file,1600);await extractDoc(img,'you');render()}
+ const img=await readImg(file,1600);await extractDoc(img,'you');if(M().pending)render()}
 function readImg(file,max){return new Promise(res=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.85))};im.src=fr.result};fr.readAsDataURL(file)})}
-async function extractDoc(img,from){const m=M();let r=null;try{r=await claude(`You read Indian prescriptions and lab reports (printed or handwritten) for a family health record. Patient context:\n${profileText()}\nExtract only what is clearly written; never guess doses. Times: convert OD/BD/TDS, morning/after food etc. into HH:MM using 08:00 breakfast, 13:30 lunch, 20:00 dinner, 21:30 bedtime. Today is ${today()}.\nReturn ONLY JSON: {"type":"prescription|lab report|other","doctor":"","date":"YYYY-MM-DD or empty","meds":[{"name":"name + strength","when":"HH:MM","for":"plain-English purpose","note":"how to take"}],"tests":[{"name":"","value":"with unit","ref":"normal range","flag":"normal|high|low"}],"advice":["short diet/lifestyle rules written by the doctor"],"next_visit":null or {"what":"","date":"YYYY-MM-DD"},"summary":"one line: what changed vs the current medicines"}. One entry per dose time (a BD medicine = two entries).`,
-  [{type:'image',source:{type:'base64',media_type:'image/jpeg',data:img.split(',')[1]}},{type:'text',text:'Read this document.'}])}catch(e){toast(e.message)}
- r=r||mockDoc();let thumb=img;try{const im=new Image();im.src=img;await im.decode();const c=document.createElement('canvas'),s=Math.min(1,440/im.width);c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);thumb=c.toDataURL('image/jpeg',.7)}catch(e){}
+async function extractDoc(img,from){const m=M();let r=null,err='';try{r=await claude(`You read medical documents for a family health record: prescriptions and Rx forms (printed, handwritten, scanned, any country or format), lab reports, discharge summaries. The family member it is being filed for:\n${profileText()}\nRules: ALWAYS return the JSON even if the document is old, unusual, or for a different patient name — never refuse. Copy medicine names exactly as written (including compounded mixtures or abbreviations) and set "unclear":true on anything you cannot read with confidence. Decode prescription Latin: od/qd=once daily 08:00; bd/bid=08:00 & 20:00; tds/tid=08:00, 14:00 & 20:00; qid=4 times; a.c.=before food (use 07:30, 13:00, 19:30); p.c.=after food; hs=bedtime 21:30; sos/prn=only when needed (when "as needed"). Give one med entry per dose time. Never invent doses. Today is ${today()}.\nReturn ONLY JSON, no prose: {"type":"prescription|lab report|discharge summary|other","patient_on_document":"","doctor":"","date":"YYYY-MM-DD or empty","meds":[{"name":"","when":"HH:MM or as needed","for":"plain-English purpose if stated or obvious, else empty","note":"how to take, in plain English","unclear":false}],"tests":[{"name":"","value":"with unit","ref":"normal range","flag":"normal|high|low"}],"advice":["short rules written by the doctor"],"next_visit":null,"summary":"one plain-English line on what this document says and what would change"}`,
+  [{type:'image',source:{type:'base64',media_type:'image/jpeg',data:img.split(',')[1]}},{type:'text',text:'Read this document and return the JSON.'}],true,2000)}catch(e){err=e.message;toast(e.message)}
+ if(!r){if(!offline()){m.pending=null;save();const o=$('#scanOut');if(o)o.innerHTML=`<div class="found"><b>Couldn't read this document.</b><br><span class="small">${esc(err||'No reply')}. Try a straighter, brighter photo.</span></div>`;return}r=mockDoc()}
+ let thumb=img;try{const im=new Image();im.src=img;await im.decode();const c=document.createElement('canvas'),s=Math.min(1,440/im.width);c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);thumb=c.toDataURL('image/jpeg',.7)}catch(e){}
  m.pending={...r,img:thumb,from};save()}
 function applyDoc(){const m=M(),r=m.pending;if(!r)return;const dt=/^\d{4}-\d{2}-\d{2}$/.test(r.date||'')?r.date:today();
  if(r.meds?.length){const old=m.meds;m.meds=r.meds.map(x=>{const prev=old.find(o=>o.name.toLowerCase()===String(x.name).toLowerCase()&&o.when===x.when)||old.find(o=>o.name.toLowerCase()===String(x.name).toLowerCase());
-  return {id:prev&&prev.when===x.when?prev.id:'x'+uid(),name:x.name,when:/^\d{1,2}:\d{2}$/.test(x.when)?x.when.padStart(5,'0'):'08:00',for:x.for||'',note:x.note||'',look:prev?.look||'',left:prev?.left??30,perDay:prev?.perDay||1}})}
+  return {id:prev&&prev.when===x.when?prev.id:'x'+uid(),name:x.name,when:/^\d{1,2}:\d{2}$/.test(x.when)?x.when.padStart(5,'0'):'23:59',for:x.for||'',note:(/^\d{1,2}:\d{2}$/.test(x.when)?'':'as needed · ')+(x.note||''),look:prev?.look||'',left:prev?.left??30,perDay:prev?.perDay||1}})}
  (r.tests||[]).forEach(x=>m.reports.push({id:uid(),date:dt,name:x.name,value:x.value,ref:x.ref||'',flag:x.flag||'normal'}));
  (r.advice||[]).forEach(a=>{if(!m.diet.rules.includes(a))m.diet.rules.push(a)});
  if(r.type==='prescription')m.appts.push({id:uid(),date:dt,doctor:r.doctor||'Doctor',purpose:'Visit (from scanned prescription)',notes:r.summary||'',done:true});
@@ -602,7 +604,7 @@ function logMeal(ml,img){if(!ml||!ml.items)return;day().meals.unshift({t:hhmm(),
 async function handleText(text,isVoice){
  push({from:'out',type:isVoice?'voice':'',text});busy=true;render();
  let r;try{r=await claude(`${RULES()}\n${profileText()}\nIf the message describes food they ate, judge it against the DOCTOR'S DIET ADVICE and fill "meal". If they ask what to eat, suggest simple Indian home food that fits the advice.\nReturn ONLY JSON: {"reply":"","mood":"good|ok|low","symptoms":["short English labels"],"took_meds":["ids taken/given now"],"walk_minutes":0,"urgent":false,${MEAL_JSON},"note_for_family":"one short English line or empty"}`,text)}catch(e){toast(e.message);r=null}
- busy=false;r=r||mockText(text);const d=day();
+ busy=false;if(!r&&!offline()){saathiSays('Sorry, I could not process that just now. Please try again 🙏');return}r=r||mockText(text);const d=day();
  (r.took_meds||[]).forEach(id=>medById(id)&&markTaken(id,isVoice?'said in a voice note':'said in chat'));
  if(r.walk_minutes){d.walk+=+r.walk_minutes;note(`Walked ${r.walk_minutes} min`,'ok')}
  if(r.meal)logMeal(r.meal);
@@ -616,9 +618,9 @@ async function handlePhoto(file){if(!file)return;
  const img=await new Promise(res=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,1000/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.82))};im.src=fr.result};fr.readAsDataURL(file)});
  let thumb=img;try{const im=new Image();im.src=img;await im.decode();const c=document.createElement('canvas'),s=Math.min(1,440/im.width);c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);thumb=c.toDataURL('image/jpeg',.7)}catch(e){}
  push({from:'out',type:'img',img:thumb});busy=true;render();
- let r;try{r=await claude(`${RULES()}\n${profileText()}\nA photo was sent. Decide if it shows MEDICINE (tablet strip/box/bottle), a MEAL, or a DOCUMENT (prescription or lab report → kind "document": thank them and say ${CH()} will review it; do not interpret doses).\nMEDICINE: read the label and match it to the MEDICINES list by name/salt (not by looks alone). If it matches, say what it is for, how to take it, and whether it is due now (time has come and not taken yet). If it is NOT on the list, set wrong=true and say clearly NOT to take it and that ${CH()} will check.\nMEAL: name the items (Indian home food), judge against the DOCTOR'S DIET ADVICE — verdict good/okay/poor, which rules were followed or broken (use the exact rule texts), one practical tip.\nReturn ONLY JSON: {"kind":"medicine|meal|document|other","label_read":"","med_id":"id or null","wrong":false,"due_now":false,${MEAL_JSON},"reply":""}`,
+ let r;try{r=await claude(`${RULES()}\n${profileText()}\nA photo was sent. Decide if it shows MEDICINE (tablet strip/box/bottle), a MEAL, or a DOCUMENT (any prescription or Rx form — printed, handwritten or a scan; lab report; discharge summary; doctor's note → kind "document": thank them and say ${CH()} will review it; do not interpret doses). When unsure between document and other, choose document.\nMEDICINE: read the label and match it to the MEDICINES list by name/salt (not by looks alone). If it matches, say what it is for, how to take it, and whether it is due now (time has come and not taken yet). If it is NOT on the list, set wrong=true and say clearly NOT to take it and that ${CH()} will check.\nMEAL: name the items (Indian home food), judge against the DOCTOR'S DIET ADVICE — verdict good/okay/poor, which rules were followed or broken (use the exact rule texts), one practical tip.\nReturn ONLY JSON: {"kind":"medicine|meal|document|other","label_read":"","med_id":"id or null","wrong":false,"due_now":false,${MEAL_JSON},"reply":""}`,
   [{type:'image',source:{type:'base64',media_type:'image/jpeg',data:img.split(',')[1]}},{type:'text',text:'Please check this.'}])}catch(e){toast(e.message);r=null}
- busy=false;r=r||mockPhoto();const d=day();
+ busy=false;if(!r&&!offline()){saathiSays("Sorry, I couldn't read that photo. Please send a clearer one 🙏");return}r=r||mockPhoto();const d=day();
  if(r.kind==='medicine'){const x=medById(r.med_id);
   d.pills.push({t:hhmm(),wrong:!!r.wrong,text:r.label_read||'unknown tablet'});
   note(r.wrong?`Tablet check: “${r.label_read}” is NOT on the list — told not to take it`:`Tablet check: ${x?x.name:r.label_read}${r.due_now?' — due now':''}`,r.wrong?'amber':'');
