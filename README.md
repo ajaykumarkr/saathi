@@ -38,7 +38,7 @@ Saathi works for any family member (Amma, Appa, Ajji…). Messages go either to 
 - **Daily check-ins** in Kannada, Hindi, Tamil, Telugu or English, by text or voice; replies can be sent as voice notes.
 - **Red flags** (chest pain, a fall, breathlessness, low-sugar signs) trigger "sit down and call 108" and an immediate family alert.
 
-**2. Health record**: profile, conditions, allergies, current medicines with 7-day adherence, reports with abnormal values flagged, doctors, upcoming and past appointments with the doctor's notes, diet advice, and recent symptoms in the parent's own words. Share it with any doctor by **email**, **download as PDF / print**, or copy as text; an AI-drafted note for the doctor can be added.
+**2. Health record**: **scan a prescription or lab report photo** → Claude reads it (printed or handwritten), proposes new medicines and times, test results, the doctor's advice and the next visit → the child approves before anything changes, and the parent gets their updated tablet times on WhatsApp. The record also holds profile, conditions, allergies, current medicines with 7-day adherence, reports with abnormal values flagged, doctors, upcoming and past appointments with the doctor's notes, diet advice, and recent symptoms in the parent's own words. Share it with any doctor by **email**, **download as PDF / print**, or copy as text; an AI-drafted note for the doctor can be added.
 
 **3. Summary for the child**: a one-line status, **"Saathi reminds you"** (overdue eye check, upcoming tests and reviews, refills) with Mark booked / Tell Amma, and a **Daily / Weekly** view of food against the doctor's rules, tablets, walking and mood, plus an AI brief.
 
@@ -52,6 +52,7 @@ All intelligence comes from Claude (Anthropic) through `api/claude.js`:
 |---|---|
 | Chat and voice check-ins | Replies in the parent's language and extracts structured data (`mood`, `symptoms`, `took_meds`, `walk_minutes`, `urgent`) that updates the family dashboard |
 | Tablet photo | Vision: reads the label, matches it to the prescription, decides if it's due or the wrong medicine |
+| Prescription / lab report photo | Vision: extracts medicines (converting OD/BD/after food into times), test values with normal ranges, the doctor's advice and next visit; shows a diff against current medicines for the child to approve |
 | Meal photo | Vision: identifies Indian home food, rates sugar and salt against the parent's conditions |
 | Daily brief | Summarises 7 days of logs into four actionable lines for the child |
 | Doctor note | Turns the week's logs into a concise clinical-style note |
