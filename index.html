@@ -258,12 +258,12 @@ function seedAppa(){
 }
 function blankMember(){return {rules:defRules(),id:'m'+uid(),name:'',call:'',relation:'',age:'',city:'',lang:'kn-IN',blood:'',conds:[],allergies:[],history:'',emergency:'',walkGoal:20,contact:{type:'self',name:'',phone:''},guidance:'',meds:[],doctors:[],appts:[],tasks:[],reports:[],diet:{by:'',date:today(),rules:[]},ordered:{},days:{}}}
 
-const defRules=()=>({quietStart:'22:00',quietEnd:'07:00',maxRem:2,routine:'instant',decision:'ack',personal:'ack',chatter:'none'});
+const defRules=()=>({v:2,quietStart:'22:00',quietEnd:'07:00',maxRem:2,routine:'instant',decision:'ack',personal:'ack',chatter:'reply'});
 let S;
 try{S=JSON.parse(localStorage.getItem('saathi3')||'null')}catch(e){S=null}
 const fresh=()=>({members:[seedAmma(),seedAppa()],active:'amma',settings:{key:S?.settings?.key||'',model:'claude-sonnet-5-5',speak:true,child:'Ajay'}});
 if(!S||!S.members||!S.members.length)S=fresh();
-S.members.forEach(m=>{m.rules={...defRules(),...(m.rules||{})}});
+S.members.forEach(m=>{m.rules={...defRules(),...(m.rules||{})};if(m.rules.v!==2){m.rules.chatter='reply';m.rules.v=2}});
 const save=()=>{try{localStorage.setItem('saathi3',JSON.stringify(S))}catch(e){}};
 const M=()=>S.members.find(m=>m.id===S.active)||S.members[0];
 const CH=()=>S.settings.child||'Ajay';
@@ -300,7 +300,7 @@ DOCTOR'S DIET ADVICE (${m.diet.by||'doctor'}): ${m.diet.rules.join('; ')||'none'
 FAMILY GUIDANCE: ${m.guidance||'-'}.
 ${isCare()?`YOU ARE MESSAGING ${m.contact.name}, the paid CARETAKER of ${m.call} (not the patient). Address ${m.contact.name} by name, refer to the patient as ${m.call}.`:`YOU ARE MESSAGING ${m.call} directly.`}`}
 const RULES=()=>`You are Saathi, ${CH()}'s helper: a separate WhatsApp assistant that helps care for an elderly parent. You are NOT ${CH()} — never write as if you were ${CH()}; refer to ${CH()} in the third person (e.g. "${CH()} will call you this evening").
-CLASSIFY every incoming message as "category": red_flag (safety emergency), routine (answerable purely from the schedule, diet rules or a photo check: which tablet now, 👍/taken, meal, tablet strip, what to eat, appointment date), decision (anything needing a human decision: skipping/changing a medicine, a new medicine, a new non-urgent symptom, a prescription or report, money, orders), personal (meant for ${CH()} or emotional/family matters: "tell Ajay to call", loneliness, family news), chatter (greetings forwards, "ok", good-morning images, jokes). For decision and personal: the reply must be ONE short warm acknowledgement that ${CH()} will get back to them — no advice, no answer. Reply in the SAME language and script the sender used (Kannada, Hindi, Tamil, Telugu or English; if unsure, simple English). Max 3 short sentences, simple words, kind, at most one emoji.
+CLASSIFY every incoming message as "category": red_flag (safety emergency), routine (answerable purely from the schedule, diet rules or a photo check: which tablet now, 👍/taken, meal, tablet strip, what to eat, appointment date), decision (anything needing a human decision: skipping/changing a medicine, a new medicine, a new non-urgent symptom, a prescription or report, money, orders), personal (meant for ${CH()} or emotional/family matters: "tell Ajay to call", loneliness, family news), chatter (greetings forwards, "ok", good-morning images, jokes). EVERY message gets a reply (for chatter: one short friendly line). For decision and personal: the reply must be ONE short warm acknowledgement that ${CH()} will get back to them — no advice, no answer. Reply in the SAME language and script the sender used (Kannada, Hindi, Tamil, Telugu or English; if unsure, simple English). Max 3 short sentences, simple words, kind, at most one emoji.
 NEVER diagnose. NEVER add, change, skip or stop a medicine or dose beyond the listed schedule — for any doubt say "please check with the doctor" and that ${CH()} will be told.
 When asked which tablet to take: answer ONLY from the MEDICINES list and TAKEN TODAY, naming the tablet, what it is for and how to take it.
 If chest pain, breathlessness, fainting, a fall, confusion, or low-sugar signs (shaking, sweating) are mentioned: urgent=true — tell them to sit down, call 108 now, and that ${CH()} is being alerted.`;
@@ -348,6 +348,7 @@ function mockText(text){const l=' '+text.toLowerCase()+' ',m=M(),d=day();const h
  else if(symptoms.length)reply=`Sorry to hear about the ${symptoms.join(' and ')}. Rest and drink water — I've told ${CH()}.`;
  else if(took.length)reply=`Very good! Noted ✅`;
  else reply=`Thank you ${addressee()} 😊 I've noted it.`;
+ if(/^\s*(ok|okay|good morning|gm|🙏|👌)\s*$/i.test(text.trim()))reply=`🙏 Good to hear from you, ${addressee()}! Message me anytime you need help.`;
  const category=urgent?'red_flag':/skip|stop|change|new medicine|instead/.test(l)?'decision':/tell ajay|call me|lonely|miss you/.test(l)?'personal':/^\s*(ok|okay|good morning|gm|🙏|👌)\s*$/i.test(text.trim())?'chatter':'routine';
  if(category==='decision'||category==='personal')reply=`Okay ${addressee()} 🙏 ${CH()} will get back to you soon.`;
  return {category,reply,mood:symptoms.length?'low':'good',symptoms,took_meds:took,walk_minutes:0,urgent,meal,note_for_family:''}}
@@ -592,7 +593,7 @@ function vSettings(){const m=M();const medsTxt=m.meds.map(x=>`${x.name} | ${x.wh
   <div><label for="rRoutine">Routine questions (which tablet, meals, photos)</label><select id="rRoutine"><option value="instant" ${m.rules.routine==='instant'?'selected':''}>Saathi answers instantly</option><option value="hold" ${m.rules.routine==='hold'?'selected':''}>Hold for me to answer</option></select></div>
   <div><label for="rDecision">Needs a decision (skip/change medicine, new symptom, documents)</label><select id="rDecision"><option value="ack" ${m.rules.decision==='ack'?'selected':''}>Short acknowledgement + send to me</option><option value="silent" ${m.rules.decision==='silent'?'selected':''}>No reply, just send to me</option></select></div>
   <div><label for="rPersonal">Personal / for me (“tell Ajay to call”, feelings)</label><select id="rPersonal"><option value="ack" ${m.rules.personal==='ack'?'selected':''}>Warm acknowledgement + send to me</option><option value="silent" ${m.rules.personal==='silent'?'selected':''}>No reply, just send to me</option></select></div>
-  <div><label for="rChatter">Chatter and forwards (“ok”, good-morning images)</label><select id="rChatter"><option value="none" ${m.rules.chatter==='none'?'selected':''}>No reply</option><option value="pray" ${m.rules.chatter==='pray'?'selected':''}>One 🙏 now and then</option></select></div>
+  <div><label for="rChatter">Chatter and forwards (“ok”, good-morning images)</label><select id="rChatter"><option value="reply" ${m.rules.chatter==='reply'?'selected':''}>Short friendly reply</option><option value="pray" ${m.rules.chatter==='pray'?'selected':''}>Just a 🙏</option><option value="none" ${m.rules.chatter==='none'?'selected':''}>No reply</option></select></div>
  </div>
  <div class="row" style="margin-top:16px"><button class="primary" id="saveMem">Save ${esc(m.call||'member')}</button>${S.members.length>1?`<button class="danger" id="delMem">Remove</button>`:''}</div></div>
  <h2>App settings</h2>
@@ -637,7 +638,7 @@ async function handleText(text,isVoice){
  if(r.symptoms?.length)note(`Mentioned ${r.symptoms.join(', ')}`,'amber');else if(r.note_for_family)note(r.note_for_family);
  if(cat==='decision'||cat==='personal'){d.waiting.push({id:uid(),t:hhmm(),text,cat});note(`Waiting for ${CH()}: “${text}” (${cat==='decision'?'needs a decision':'for you'})`,'amber');
   if(R[cat]==='ack')saathiSays(r.reply||`Okay 🙏 ${CH()} will get back to you soon.`);else{save();render()}return}
- if(cat==='chatter'){if(R.chatter==='pray'&&!d.chat.some(x=>x.from==='in'&&x.text==='🙏'&&x.t>=hhmm().slice(0,2)))push({from:'in',type:'big',text:'🙏'});else{save();render()}return}
+ if(cat==='chatter'){if(R.chatter==='reply')saathiSays(r.reply||'🙏');else if(R.chatter==='pray')push({from:'in',type:'big',text:'🙏'});else{save();render()}return}
  if(R.routine!=='instant'){d.waiting.push({id:uid(),t:hhmm(),text,cat});note(`Waiting for ${CH()}: “${text}”`,'amber');save();render();return}
  saathiSays(r.reply)}
 
@@ -699,7 +700,7 @@ const val=id=>($('#'+id)?.value||'').trim();
 function saveMember(){const m=M();
  Object.assign(m,{name:val('fName'),call:val('fCall')||val('fName'),relation:val('fRel'),age:val('fAge'),city:val('fCity'),lang:val('fLang'),blood:val('fBlood'),walkGoal:+val('fWalk')||20,
   conds:val('fConds').split(',').map(s=>s.trim()).filter(Boolean),allergies:val('fAll').split(',').map(s=>s.trim()).filter(Boolean),emergency:val('fEm'),history:val('fHist'),guidance:val('fGuide')});
- m.rules={quietStart:val('rQs')||'22:00',quietEnd:val('rQe')||'07:00',maxRem:+val('rMax')||2,routine:val('rRoutine')||'instant',decision:val('rDecision')||'ack',personal:val('rPersonal')||'ack',chatter:val('rChatter')||'none'};
+ m.rules={quietStart:val('rQs')||'22:00',quietEnd:val('rQe')||'07:00',maxRem:+val('rMax')||2,routine:val('rRoutine')||'instant',decision:val('rDecision')||'ack',personal:val('rPersonal')||'ack',chatter:val('rChatter')||'reply',v:2};
  m.contact={type:val('fCType'),name:val('fCType')==='caretaker'?(val('fCName')||'Caretaker'):m.name,phone:val('fPhone')};
  m.diet={...m.diet,by:val('fDietBy'),rules:val('fDiet').split('\n').map(s=>s.trim()).filter(Boolean)};
  const old=m.meds;m.meds=val('fMeds').split('\n').map(s=>s.trim()).filter(Boolean).map((line,i)=>{const[p0,p1,p2,p3]=line.split('|').map(s=>(s||'').trim());const prev=old.find(o=>o.name===p0&&o.when===(p1||'08:00'));

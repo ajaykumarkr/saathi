@@ -59,7 +59,7 @@ Saathi is a separate, introduced contact ("Saathi · Ajay's helper"), never the 
 | Routine | which tablet now, 👍, meal or tablet photo | Instant answer from the schedule and the doctor's rules (or hold for the child) |
 | Needs a decision | skip or change a medicine, new symptom, a prescription | Short acknowledgement, then "Waiting for you" on the child's summary. Saathi never decides |
 | Personal / for the child | "tell Ajay to call", feeling lonely | Warm acknowledgement, passed to the child |
-| Chatter | "ok", good-morning forwards | No reply (or an occasional 🙏) |
+| Chatter | "ok", good-morning forwards | Short friendly reply (configurable: just 🙏, or no reply) |
 
 Also configurable per person: **quiet hours** (no proactive messages; red flags still answered) and **reminders per dose** before Saathi stops nudging and alerts the child instead.
 
