@@ -151,17 +151,19 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 #toast.show{opacity:1}
 .demo{font-size:13px;color:var(--mute);margin-top:30px}
 .printonly{display:none}
+.sm{display:none}
+@media(max-width:700px){header{padding:8px 10px;gap:8px}.brand{font-size:19px}.who{flex:1;max-width:none;margin-right:0}nav{width:100%;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}nav a{flex:1 0 auto;min-width:auto;justify-content:center;padding:8px 10px;font-size:15px}.lg{display:none}.sm{display:inline}main{padding-top:16px}.status{padding:16px}.status h1{font-size:26px}.phone{height:min(640px,calc(100vh - 140px));border-width:6px;border-radius:28px}}
 @media(prefers-reduced-motion:reduce){#toast{transition:none}.wa-mic.on{animation:none}}
 @media(max-width:900px){.stage{grid-template-columns:minmax(0,1fr)}.phone{margin:0 auto}}
 @media(max-width:700px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2,.form{grid-template-columns:minmax(0,1fr)}.facts{grid-template-columns:repeat(2,minmax(0,1fr))}.inline{grid-template-columns:minmax(0,1fr)}.ctrl{grid-template-columns:minmax(0,1fr)}}
-@media(max-width:600px){table{font-size:14px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;color:var(--mute)}.stack td:empty{display:none}}
+@media(max-width:600px){table{font-size:14px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;color:var(--mute)}.stack td:empty{display:none}.stack td.n,.week.stack td.n{text-align:start}}
 @media print{header,.noprint,.demo,#toast{display:none!important}body{background:#fff;color:#000;font-size:12pt}main{max-width:none;padding:0}.memo{border:0;padding:0}.printonly{display:block}.tag{border:1px solid #999;background:none!important;color:#000!important}h2{break-after:avoid}table{break-inside:auto}tr{break-inside:avoid}}
 </style>
 </head>
 <body>
 <header>
   <div class="brand"><i></i>Saathi</div>
-  <select class="who" id="who" aria-label="Family member"></select>
+  <select class="who" id="who" aria-label="Family member" title="Switch family member"></select>
   <nav id="nav"></nav>
 </header>
 <main id="app"></main>
@@ -587,9 +589,10 @@ const VIEWS={phone:vPhone,record:vRecord,summary:vSummary,settings:vSettings};
 const view=()=>VIEWS[location.hash.slice(1)]?location.hash.slice(1):'phone';
 function render(){const v=view(),m=M();
  $('#who').innerHTML=S.members.map(x=>`<option value="${x.id}" ${x.id===S.active?'selected':''}>${esc(x.call||x.name||'New member')}</option>`).join('');
- $('#nav').innerHTML=[['phone',`${esc(isCare()?m.contact.name||'Caretaker':m.call||'Their')}'s phone`],['record','Health record'],['summary','Summary'],['settings','Settings']].map(([k,l])=>`<a href="#${k}" ${k===v?'aria-current="page"':''}>${l}</a>`).join('');
+ $('#nav').innerHTML=[['phone',`${esc(isCare()?m.contact.name||'Caretaker':m.call||'Their')}'s phone`,'📱 Phone'],['record','Health record','🩺 Record'],['summary','Summary','📊 Summary'],['settings','Settings','⚙️']].map(([k,l,s])=>`<a href="#${k}" ${k===v?'aria-current="page"':''} aria-label="${l}"><span class="lg">${l}</span><span class="sm">${s}</span></a>`).join('');
  const keep=$('#msg')?.value||'';
  $('#app').innerHTML=VIEWS[v]()+`<details class="demo noprint"><summary style="cursor:pointer;min-height:44px;display:flex;align-items:center"><b>What's real vs simulated</b></summary><ul style="margin:0 0 8px;padding-left:20px"><li><b>Real (live Claude AI):</b> chat and voice-note understanding in Indian languages, “which tablet now?” answers from the schedule, tablet-strip and meal photo checks against the doctor's diet rules, red-flag escalation, daily/weekly briefs, doctor note.</li><li><b>Real (app):</b> family members and caretakers, health record with email/PDF/print, reminders, refills, summaries.</li><li><b>Simulated:</b> the WhatsApp screen (real version: WhatsApp Business API), scheduled sends (triggered by buttons here), refill ordering, and the sample family's past 7 days of data. Voice uses the browser's speech recognition.</li></ul></details><p class="demo">Sample family data · WhatsApp screen is a simulation · ${S.settings.key?'<b>AI: live (your key)</b>':AI_MODE==='server'?'<b>AI: live (Claude via server)</b>':AI_MODE==='checking'?'AI: connecting…':'AI: offline — run the server or add a key in Settings'}</p>`;
+ document.querySelectorAll('table.stack').forEach(t=>{const hd=[...t.querySelectorAll('thead th')].map(x=>x.textContent);t.querySelectorAll('tbody tr').forEach(r=>[...r.cells].forEach((c,i)=>{if(c.colSpan===1)c.dataset.l=hd[i]||''}))});
  const c=$('#chat');if(c){c.scrollTop=c.scrollHeight;if($('#msg'))$('#msg').value=keep}}
 window.addEventListener('hashchange',render);
 
