@@ -5,7 +5,6 @@
 **Live app:** https://saathi-seven-tau.vercel.app/
 **Demo video (2 min):** https://github.com/ajaykumarkr/saathi/blob/main/demo/saathi-demo.mp4 (click "View raw" / download to play)
 **Use-case deck:** https://claude.ai/artifact/RRyFjP4aNt4F6Kit6rVx4M
-**Submission kit (pitch, demo script, Q&A):** https://claude.ai/artifact/JZBnZZRPtaNQzTXnq8NwFL
 
 Saathi lives in an elderly parent's WhatsApp. It reminds them about tablets, checks a tablet strip or a meal from a photo, chats with them in their own language, and raises an alarm when something sounds wrong. Their children, living in another city, see one calm status screen instead of guessing on a nightly phone call.
 
@@ -108,7 +107,7 @@ node server.js              # open http://localhost:3000
 
 You can also paste your own key in the app's Settings to call Claude directly from the browser. If no AI is reachable, the app falls back to built-in sample replies so a demo never stalls, and the footer always shows which mode is active.
 
-## Demo flow (3 minutes)
+## Try it: a 3-minute walkthrough
 
 One user, one flow: Ajay is in a meeting in Bangalore; Amma is at home in Mysuru.
 
