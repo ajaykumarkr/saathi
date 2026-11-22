@@ -41,7 +41,7 @@ h3{font-size:18px;margin:18px 0 8px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
 .muted{color:var(--mute)}
 .small{font-size:14px}
-input[type=text],input[type=password],input[type=date],input[type=number],input[type=tel],input[type=email],select,textarea{width:100%;min-height:46px;border:1px solid var(--line);border-radius:12px;padding:9px 12px;background:var(--bg);font-size:16px}
+input[type=text],input[type=password],input[type=date],input[type=time],input[type=number],input[type=tel],input[type=email],select,textarea{width:100%;min-height:46px;border:1px solid var(--line);border-radius:12px;padding:9px 12px;background:var(--bg);font-size:16px}
 textarea{min-height:90px;resize:vertical}
 label{display:block;font-weight:700;margin:12px 0 4px;font-size:15px}
 .form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}
@@ -255,12 +255,14 @@ function seedAppa(){
   ordered:{},days:{[today()]:{doses:{tel:'09:20',cal:null},walk:0,mood:null,meals:[],checkins:[],sos:[],pills:[],notes:[{t:'09:20',lvl:'ok',text:'Manju confirmed Telmisartan 40 mg'}],
    chat:[{from:'in',t:'09:00',type:'rem',med:'tel',text:'🙏 Namaskara Manju! Please give Appa his <b>Telmisartan 40 mg</b> (BP) after breakfast.'},{from:'out',t:'09:20',text:'Done, given with breakfast'},{from:'in',t:'09:20',text:'Thank you Manju! Noted ✅'}]}}};
 }
-function blankMember(){return {id:'m'+uid(),name:'',call:'',relation:'',age:'',city:'',lang:'kn-IN',blood:'',conds:[],allergies:[],history:'',emergency:'',walkGoal:20,contact:{type:'self',name:'',phone:''},guidance:'',meds:[],doctors:[],appts:[],tasks:[],reports:[],diet:{by:'',date:today(),rules:[]},ordered:{},days:{}}}
+function blankMember(){return {rules:defRules(),id:'m'+uid(),name:'',call:'',relation:'',age:'',city:'',lang:'kn-IN',blood:'',conds:[],allergies:[],history:'',emergency:'',walkGoal:20,contact:{type:'self',name:'',phone:''},guidance:'',meds:[],doctors:[],appts:[],tasks:[],reports:[],diet:{by:'',date:today(),rules:[]},ordered:{},days:{}}}
 
+const defRules=()=>({quietStart:'22:00',quietEnd:'07:00',maxRem:2,routine:'instant',decision:'ack',personal:'ack',chatter:'none'});
 let S;
 try{S=JSON.parse(localStorage.getItem('saathi3')||'null')}catch(e){S=null}
 const fresh=()=>({members:[seedAmma(),seedAppa()],active:'amma',settings:{key:S?.settings?.key||'',model:'claude-sonnet-5-5',speak:true,child:'Ajay'}});
 if(!S||!S.members||!S.members.length)S=fresh();
+S.members.forEach(m=>{m.rules={...defRules(),...(m.rules||{})}});
 const save=()=>{try{localStorage.setItem('saathi3',JSON.stringify(S))}catch(e){}};
 const M=()=>S.members.find(m=>m.id===S.active)||S.members[0];
 const CH=()=>S.settings.child||'Ajay';
@@ -270,6 +272,7 @@ const last7=()=>Array.from({length:7},(_,i)=>ago(6-i));
 const medById=id=>M().meds.find(m=>m.id===id);
 const note=(text,lvl='')=>day().notes.unshift({t:hhmm(),lvl,text});
 const isCare=()=>M().contact.type==='caretaker';
+const inQuiet=(m=M())=>{const n=nowMin(),a=toMin(m.rules.quietStart),b=toMin(m.rules.quietEnd);return a>b?(n>=a||n<b):(n>=a&&n<b)};
 const addressee=()=>isCare()?M().contact.name:M().call;
 
 /* ---------- Claude ---------- */
@@ -295,7 +298,8 @@ TAKEN TODAY: ${m.meds.map(x=>`${x.id}: ${d.doses[x.id]?'taken '+d.doses[x.id]:'n
 DOCTOR'S DIET ADVICE (${m.diet.by||'doctor'}): ${m.diet.rules.join('; ')||'none'}.
 FAMILY GUIDANCE: ${m.guidance||'-'}.
 ${isCare()?`YOU ARE MESSAGING ${m.contact.name}, the paid CARETAKER of ${m.call} (not the patient). Address ${m.contact.name} by name, refer to the patient as ${m.call}.`:`YOU ARE MESSAGING ${m.call} directly.`}`}
-const RULES=()=>`You are Saathi, a warm WhatsApp companion that helps care for an elderly parent on behalf of their child ${CH()}. Reply in the SAME language and script the sender used (Kannada, Hindi, Tamil, Telugu or English; if unsure, simple English). Max 3 short sentences, simple words, kind, at most one emoji.
+const RULES=()=>`You are Saathi, ${CH()}'s helper: a separate WhatsApp assistant that helps care for an elderly parent. You are NOT ${CH()} — never write as if you were ${CH()}; refer to ${CH()} in the third person (e.g. "${CH()} will call you this evening").
+CLASSIFY every incoming message as "category": red_flag (safety emergency), routine (answerable purely from the schedule, diet rules or a photo check: which tablet now, 👍/taken, meal, tablet strip, what to eat, appointment date), decision (anything needing a human decision: skipping/changing a medicine, a new medicine, a new non-urgent symptom, a prescription or report, money, orders), personal (meant for ${CH()} or emotional/family matters: "tell Ajay to call", loneliness, family news), chatter (greetings forwards, "ok", good-morning images, jokes). For decision and personal: the reply must be ONE short warm acknowledgement that ${CH()} will get back to them — no advice, no answer. Reply in the SAME language and script the sender used (Kannada, Hindi, Tamil, Telugu or English; if unsure, simple English). Max 3 short sentences, simple words, kind, at most one emoji.
 NEVER diagnose. NEVER add, change, skip or stop a medicine or dose beyond the listed schedule — for any doubt say "please check with the doctor" and that ${CH()} will be told.
 When asked which tablet to take: answer ONLY from the MEDICINES list and TAKEN TODAY, naming the tablet, what it is for and how to take it.
 If chest pain, breathlessness, fainting, a fall, confusion, or low-sugar signs (shaking, sweating) are mentioned: urgent=true — tell them to sit down, call 108 now, and that ${CH()} is being alerted.`;
@@ -311,6 +315,8 @@ function alerts(m=M()){const d=day(today(),m),a=[],n=nowMin();
  m.meds.forEach(x=>{if(!d.doses[x.id]&&n>toMin(x.when)+60)a.push({lvl:'amber',t:x.when,msg:`No 👍 for ${x.name} (${x.for})`})});
  d.pills.forEach(p=>{if(p.wrong)a.push({lvl:'amber',t:p.t,msg:`Tablet mix-up caught: ${p.text}`})});
  d.meals.forEach(ml=>{if(ml.verdict==='poor')a.push({lvl:'amber',t:ml.t,msg:`Poor ${ml.slot}: ${ml.items}`})});
+ (d.escal||[]).forEach(id=>{const x=m.meds.find(y=>y.id===id);if(x&&!d.doses[id])a.push({lvl:'amber',t:'',msg:`${x.name}: no reply after ${m.rules.maxRem} reminders — please call`})});
+ (d.waiting||[]).forEach(w=>a.push({lvl:'amber',t:w.t,msg:`Waiting for you: “${w.text}”`,wid:w.id}));
  if(m.pending&&m.pending.from&&m.pending.from!=='you')a.push({lvl:'amber',t:'',msg:`Review the ${m.pending.type||'document'} ${m.pending.from} sent (Health record)`});
  m.tasks.filter(t=>!t.booked&&daysTo(t.due)<0).forEach(t=>a.push({lvl:'amber',t:'',msg:`Overdue: ${t.what}`}));
  const o={red:0,amber:1,grey:2};return a.sort((x,y)=>o[x.lvl]-o[y.lvl])}
@@ -341,7 +347,9 @@ function mockText(text){const l=' '+text.toLowerCase()+' ',m=M(),d=day();const h
  else if(symptoms.length)reply=`Sorry to hear about the ${symptoms.join(' and ')}. Rest and drink water — I've told ${CH()}.`;
  else if(took.length)reply=`Very good! Noted ✅`;
  else reply=`Thank you ${addressee()} 😊 I've noted it.`;
- return {reply,mood:symptoms.length?'low':'good',symptoms,took_meds:took,walk_minutes:0,urgent,meal,note_for_family:''}}
+ const category=urgent?'red_flag':/skip|stop|change|new medicine|instead/.test(l)?'decision':/tell ajay|call me|lonely|miss you/.test(l)?'personal':/^\s*(ok|okay|good morning|gm|🙏|👌)\s*$/i.test(text.trim())?'chatter':'routine';
+ if(category==='decision'||category==='personal')reply=`Okay ${addressee()} 🙏 ${CH()} will get back to you soon.`;
+ return {category,reply,mood:symptoms.length?'low':'good',symptoms,took_meds:took,walk_minutes:0,urgent,meal,note_for_family:''}}
 let flip=0;
 function mockPhoto(){flip++;const m=M(),x=m.meds[0];
  if(flip%3===0)return {kind:'document',reply:`Thank you! Reading it now — I'll send it to ${CH()} to check 🙏`};
@@ -372,8 +380,8 @@ function bubble(m,i){const d=day();
 function vPhone(){const m=M(),d=day();
  return `<div class="stage">
  <div class="phone" aria-label="${esc(addressee())}'s WhatsApp">
-  <div class="wa-top"><span class="wa-av">S</span><div><b>Saathi 🙏</b><small>${isCare()?`${esc(m.contact.name)}'s phone · caring for ${esc(m.call)}`:`${esc(m.call)}'s phone`}</small></div></div>
-  <div class="wa-chat" id="chat"><div class="wa-day">TODAY</div>${d.chat.map(bubble).join('')}${busy?bubble({type:'typing'}):''}</div>
+  <div class="wa-top"><span class="wa-av">S</span><div><b>Saathi 🙏 · ${esc(CH())}'s helper</b><small>${isCare()?`${esc(m.contact.name)}'s phone · caring for ${esc(m.call)}`:`${esc(m.call)}'s phone`}</small></div></div>
+  <div class="wa-chat" id="chat"><div class="m in" style="background:var(--sunBg);color:var(--ink)">🙏 Namaskara ${esc(addressee())}, I'm <b>Saathi</b>, ${esc(CH())}'s helper. I'll remind ${isCare()?'you about '+esc(m.call)+"'s":'you about your'} tablets and appointments, answer simple questions, and keep ${esc(CH())} posted. Messages from ${esc(CH())} himself are marked <b>From ${esc(CH())}</b>.<span class="t">Saathi · intro</span></div><div class="wa-day">TODAY</div>${d.chat.map(bubble).join('')}${busy?bubble({type:'typing'}):''}</div>
   <form class="wa-bar" id="bar"><button type="button" class="wa-ic" id="clip" aria-label="Send photo">${CLIP}</button>
    <input id="msg" placeholder="Message" autocomplete="off" aria-label="Message">
    <button type="button" class="wa-ic wa-mic" id="mic" aria-label="Record voice note">${MIC}</button>
@@ -574,6 +582,17 @@ function vSettings(){const m=M();const medsTxt=m.meds.map(x=>`${x.name} | ${x.wh
   <div class="full"><label for="fMeds">Medicines — one per line: name | time | for | how</label><textarea id="fMeds" rows="5" placeholder="Telmisartan 40 mg | 09:00 | BP | after breakfast">${esc(medsTxt)}</textarea></div>
   <div class="full"><label for="fDiet">Doctor's diet rules — one per line</label><textarea id="fDiet" rows="5">${esc(m.diet.rules.join('\n'))}</textarea></div>
  </div>
+ <h3 style="margin-top:22px">Saathi's reply rules for ${esc(m.call||'this member')}</h3>
+ <p class="small muted" style="margin:0">Saathi always says it is ${esc(CH())}'s helper, never ${esc(CH())}. Safety red flags (chest pain, a fall, breathlessness, low-sugar signs) always get an instant reply and alert you — that can't be switched off.</p>
+ <div class="form">
+  <div><label for="rQs">Quiet hours start</label><input type="time" id="rQs" value="${esc(m.rules.quietStart)}"></div>
+  <div><label for="rQe">Quiet hours end</label><input type="time" id="rQe" value="${esc(m.rules.quietEnd)}"></div>
+  <div><label for="rMax">Reminders per dose before alerting you</label><select id="rMax">${[1,2,3].map(n=>`<option ${m.rules.maxRem==n?'selected':''}>${n}</option>`).join('')}</select></div>
+  <div><label for="rRoutine">Routine questions (which tablet, meals, photos)</label><select id="rRoutine"><option value="instant" ${m.rules.routine==='instant'?'selected':''}>Saathi answers instantly</option><option value="hold" ${m.rules.routine==='hold'?'selected':''}>Hold for me to answer</option></select></div>
+  <div><label for="rDecision">Needs a decision (skip/change medicine, new symptom, documents)</label><select id="rDecision"><option value="ack" ${m.rules.decision==='ack'?'selected':''}>Short acknowledgement + send to me</option><option value="silent" ${m.rules.decision==='silent'?'selected':''}>No reply, just send to me</option></select></div>
+  <div><label for="rPersonal">Personal / for me (“tell Ajay to call”, feelings)</label><select id="rPersonal"><option value="ack" ${m.rules.personal==='ack'?'selected':''}>Warm acknowledgement + send to me</option><option value="silent" ${m.rules.personal==='silent'?'selected':''}>No reply, just send to me</option></select></div>
+  <div><label for="rChatter">Chatter and forwards (“ok”, good-morning images)</label><select id="rChatter"><option value="none" ${m.rules.chatter==='none'?'selected':''}>No reply</option><option value="pray" ${m.rules.chatter==='pray'?'selected':''}>One 🙏 now and then</option></select></div>
+ </div>
  <div class="row" style="margin-top:16px"><button class="primary" id="saveMem">Save ${esc(m.call||'member')}</button>${S.members.length>1?`<button class="danger" id="delMem">Remove</button>`:''}</div></div>
  <h2>App settings</h2>
  <div class="card"><div class="form">
@@ -606,16 +625,20 @@ function logMeal(ml,img){if(!ml||!ml.items)return;day().meals.unshift({t:hhmm(),
 
 async function handleText(text,isVoice){
  push({from:'out',type:isVoice?'voice':'',text});busy=true;render();
- let r;try{r=await claude(`${RULES()}\n${profileText()}\nIf the message describes food they ate, judge it against the DOCTOR'S DIET ADVICE and fill "meal". If they ask what to eat, suggest simple Indian home food that fits the advice.\nReturn ONLY JSON: {"reply":"","mood":"good|ok|low","symptoms":["short English labels"],"took_meds":["ids taken/given now"],"walk_minutes":0,"urgent":false,${MEAL_JSON},"note_for_family":"one short English line or empty"}`,text)}catch(e){toast(e.message);r=null}
+ let r;try{r=await claude(`${RULES()}\n${profileText()}\nIf the message describes food they ate, judge it against the DOCTOR'S DIET ADVICE and fill "meal". If they ask what to eat, suggest simple Indian home food that fits the advice.\nReturn ONLY JSON: {"category":"red_flag|routine|decision|personal|chatter","reply":"","mood":"good|ok|low","symptoms":["short English labels"],"took_meds":["ids taken/given now"],"walk_minutes":0,"urgent":false,${MEAL_JSON},"note_for_family":"one short English line or empty"}`,text)}catch(e){toast(e.message);r=null}
  busy=false;if(!r&&!offline()){saathiSays('Sorry, I could not process that just now. Please try again 🙏');return}r=r||mockText(text);const d=day();
  (r.took_meds||[]).forEach(id=>medById(id)&&markTaken(id,isVoice?'said in a voice note':'said in chat'));
  if(r.walk_minutes){d.walk+=+r.walk_minutes;note(`Walked ${r.walk_minutes} min`,'ok')}
  if(r.meal)logMeal(r.meal);
  d.checkins.push({t:hhmm(),text,mood:r.mood,symptoms:r.symptoms||[],urgent:!!r.urgent});d.mood=r.mood;
- if(r.urgent){d.sos.push({t:hhmm(),text});note(`URGENT — ${r.symptoms?.join(', ')||'unwell'}. Told to call 108. ${CH()} alerted.`,'red');toast(`🚨 Alert sent to ${CH()}`)}
- else if(r.symptoms?.length)note(`Mentioned ${r.symptoms.join(', ')}`,'amber');
- else if(r.note_for_family)note(r.note_for_family);
- saathiSays(r.reply,r.urgent?{urgent:true}:{})}
+ const cat=r.urgent?'red_flag':(r.category||'routine'),R=M().rules;d.waiting=d.waiting||[];
+ if(r.urgent){d.sos.push({t:hhmm(),text});note(`URGENT — ${r.symptoms?.join(', ')||'unwell'}. Told to call 108. ${CH()} alerted.`,'red');toast(`🚨 Alert sent to ${CH()}`);return saathiSays(r.reply,{urgent:true})}
+ if(r.symptoms?.length)note(`Mentioned ${r.symptoms.join(', ')}`,'amber');else if(r.note_for_family)note(r.note_for_family);
+ if(cat==='decision'||cat==='personal'){d.waiting.push({id:uid(),t:hhmm(),text,cat});note(`Waiting for ${CH()}: “${text}” (${cat==='decision'?'needs a decision':'for you'})`,'amber');
+  if(R[cat]==='ack')saathiSays(r.reply||`Okay 🙏 ${CH()} will get back to you soon.`);else{save();render()}return}
+ if(cat==='chatter'){if(R.chatter==='pray'&&!d.chat.some(x=>x.from==='in'&&x.text==='🙏'&&x.t>=hhmm().slice(0,2)))push({from:'in',type:'big',text:'🙏'});else{save();render()}return}
+ if(R.routine!=='instant'){d.waiting.push({id:uid(),t:hhmm(),text,cat});note(`Waiting for ${CH()}: “${text}”`,'amber');save();render();return}
+ saathiSays(r.reply)}
 
 async function handlePhoto(file){if(!file)return;
  const img=await new Promise(res=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,1000/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.82))};im.src=fr.result};fr.readAsDataURL(file)});
@@ -636,8 +659,11 @@ async function handlePhoto(file){if(!file)return;
  else saathiSays(r.reply||'Thank you 😊')}
 
 function scheduled(kind){const m=M(),d=day(),who=addressee();
+ if(inQuiet(m)&&kind!=='ask')return toast(`Quiet hours (${m.rules.quietStart}–${m.rules.quietEnd}) — Saathi will send this at ${m.rules.quietEnd}`);
  if(kind==='med'){const pend=new Set(d.chat.filter(x=>x.type==='rem').map(x=>x.med));const x=m.meds.find(y=>!d.doses[y.id]&&!pend.has(y.id))||m.meds.find(y=>!d.doses[y.id]);
   if(!x)return toast('All tablets done for today');
+  const sent=d.chat.filter(y=>y.type==='rem'&&y.med===x.id).length;
+  if(sent>=m.rules.maxRem){if(!(d.escal||[]).includes(x.id)){(d.escal=d.escal||[]).push(x.id);note(`No 👍 for ${x.name} after ${sent} reminders — Saathi stopped reminding and told ${CH()}`,'amber');save();render()}return toast(`Limit reached (${m.rules.maxRem} reminders) — ${CH()} alerted instead`)}
   return saathiSays(`💊 ${who}, time for ${isCare()?m.call+"'s":'your'} ${x.name} (for ${x.for}) — ${x.note}. Reply 👍 once ${isCare()?'given':'taken'}.`,{type:'rem',med:x.id})}
  if(kind==='meal')return saathiSays(`🍽️ ${who}, what did ${isCare()?m.call:'you'} have for ${slotNow()}? Send a photo or a voice note.`);
  if(kind==='how')return saathiSays(isCare()?`🙏 Namaskara ${who}! How is ${m.call} feeling today? Any pain, dizziness or trouble?`:`🙏 Namaskara ${who}! How are you feeling today? You can send me a voice message.`);
@@ -672,6 +698,7 @@ const val=id=>($('#'+id)?.value||'').trim();
 function saveMember(){const m=M();
  Object.assign(m,{name:val('fName'),call:val('fCall')||val('fName'),relation:val('fRel'),age:val('fAge'),city:val('fCity'),lang:val('fLang'),blood:val('fBlood'),walkGoal:+val('fWalk')||20,
   conds:val('fConds').split(',').map(s=>s.trim()).filter(Boolean),allergies:val('fAll').split(',').map(s=>s.trim()).filter(Boolean),emergency:val('fEm'),history:val('fHist'),guidance:val('fGuide')});
+ m.rules={quietStart:val('rQs')||'22:00',quietEnd:val('rQe')||'07:00',maxRem:+val('rMax')||2,routine:val('rRoutine')||'instant',decision:val('rDecision')||'ack',personal:val('rPersonal')||'ack',chatter:val('rChatter')||'none'};
  m.contact={type:val('fCType'),name:val('fCType')==='caretaker'?(val('fCName')||'Caretaker'):m.name,phone:val('fPhone')};
  m.diet={...m.diet,by:val('fDietBy'),rules:val('fDiet').split('\n').map(s=>s.trim()).filter(Boolean)};
  const old=m.meds;m.meds=val('fMeds').split('\n').map(s=>s.trim()).filter(Boolean).map((line,i)=>{const[p0,p1,p2,p3]=line.split('|').map(s=>(s||'').trim());const prev=old.find(o=>o.name===p0&&o.when===(p1||'08:00'));
@@ -684,7 +711,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  if(b.dataset.who){sumWho=b.dataset.who;if(sumWho!=='all')S.active=sumWho;save();render();scrollTo(0,0);return}
  if(b.dataset.mid)S.active=b.dataset.mid;const m=M();
  if(b.dataset.taken){push({from:'out',type:'big',text:'👍'});markTaken(b.dataset.taken,'👍 reply');save();saathiSays(`Well done! Noted ✅`);return}
- if(b.dataset.later){push({from:'out',text:'Later'});saathiSays(`Okay, I'll remind again in 15 minutes ⏰`);return}
+ if(b.dataset.later){push({from:'out',text:'Later'});const sent=day().chat.filter(y=>y.type==='rem'&&y.med===b.dataset.later).length;saathiSays(sent>=M().rules.maxRem?`Okay. Please take it when you can — ${CH()} will check in with you.`:`Okay, I'll remind you again in 15 minutes ⏰`);if(sent>=M().rules.maxRem){note(`${medById(b.dataset.later)?.name} still not taken after ${sent} reminders — ${CH()} alerted`,'amber');save()}return}
  if(b.dataset.play){const x=day().chat[+b.dataset.play];if(x)speak(x.text,x.from==='in'?m.lang:m.lang);return}
  if(b.dataset.sched){scheduled(b.dataset.sched);return}
  if(b.dataset.scope){sumScope=b.dataset.scope;render();return}
@@ -695,7 +722,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  switch(b.id){
   case 'clip':$('#photoFile').click();break;
   case 'mic':toggleMic(b);break;
-  case 'nudge':{const t=val('nudgeTxt');if(t){day().chat.push({from:'in',t:hhmm(),text:`<b>From ${esc(CH())}:</b> ${esc(t)}`});note(`${CH()} sent: ${t}`);save();toast(`Sent to ${addressee()}'s WhatsApp`)}break}
+  case 'nudge':{const t=val('nudgeTxt');if(t){day().waiting=[];day().chat.push({from:'in',t:hhmm(),text:`<b>From ${esc(CH())}:</b> ${esc(t)}`});note(`${CH()} sent: ${t}`);save();toast(`Sent to ${addressee()}'s WhatsApp`)}break}
   case 'brief':brief();break;
   case 'scanDoc':$('#docFile').click();break;
   case 'applyDoc':applyDoc();break;

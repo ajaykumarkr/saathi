@@ -45,6 +45,20 @@ Saathi works for any family member (Amma, Appa, Ajji…). Messages go either to 
 
 **4. Settings**: add family members and caretakers, instructions for Saathi and the caretaker, medicines, the doctor's diet rules, and language.
 
+## Reply rules and transparency
+
+Saathi is a separate, introduced contact ("Saathi · Ajay's helper"), never the child pretending to reply. Its first message explains who it is, and anything the child sends through it is labelled "From Ajay". Every incoming message is classified by Claude, and each family member has their own rules in Settings:
+
+| Message type | Example | Default |
+|---|---|---|
+| Safety red flag | chest pain, a fall, low-sugar signs | Instant reply ("sit down, call 108") and the child is alerted. Always on |
+| Routine | which tablet now, 👍, meal or tablet photo | Instant answer from the schedule and the doctor's rules (or hold for the child) |
+| Needs a decision | skip or change a medicine, new symptom, a prescription | Short acknowledgement, then "Waiting for you" on the child's summary. Saathi never decides |
+| Personal / for the child | "tell Ajay to call", feeling lonely | Warm acknowledgement, passed to the child |
+| Chatter | "ok", good-morning forwards | No reply (or an occasional 🙏) |
+
+Also configurable per person: **quiet hours** (no proactive messages; red flags still answered) and **reminders per dose** before Saathi stops nudging and alerts the child instead.
+
 ## Where the AI is used
 
 All intelligence comes from Claude (Anthropic) through `api/claude.js`:
