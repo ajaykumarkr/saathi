@@ -8,6 +8,29 @@
 
 Saathi lives in an elderly parent's WhatsApp. It reminds them about tablets, checks a tablet strip or a meal from a photo, chats with them in their own language, and raises an alarm when something sounds wrong. Their children, living in another city, see one calm status screen instead of guessing on a nightly phone call.
 
+## Demo
+
+![Saathi walkthrough: Amma's WhatsApp, prescription approval, red-flag alert, family summary](demo/preview.gif)
+
+Full 2-minute video with captions: [watch / download](https://github.com/ajaykumarkr/saathi/raw/main/demo/saathi-demo.mp4)
+
+## Slides
+
+<img src="demo/slides/slide-01.png" width="49%" alt="Slide 1">
+<img src="demo/slides/slide-02.png" width="49%" alt="Slide 2">
+<img src="demo/slides/slide-03.png" width="49%" alt="Slide 3">
+<img src="demo/slides/slide-04.png" width="49%" alt="Slide 4">
+<img src="demo/slides/slide-05.png" width="49%" alt="Slide 5">
+<img src="demo/slides/slide-06.png" width="49%" alt="Slide 6">
+<img src="demo/slides/slide-07.png" width="49%" alt="Slide 7">
+<img src="demo/slides/slide-08.png" width="49%" alt="Slide 8">
+<img src="demo/slides/slide-09.png" width="49%" alt="Slide 9">
+<img src="demo/slides/slide-10.png" width="49%" alt="Slide 10">
+<img src="demo/slides/slide-11.png" width="49%" alt="Slide 11">
+<img src="demo/slides/slide-12.png" width="49%" alt="Slide 12">
+
+[Download the slides as PDF](https://github.com/ajaykumarkr/saathi/raw/main/demo/saathi-use-cases.pdf)
+
 ## The problem
 
 Millions of Indian parents in their 60s and 70s live alone while their children work in other cities. They manage several daily medicines, diet limits and doctor visits on their own, often without the tech skills to get help. Their children can't visit often or attend doctor appointments, so they have no reliable way to know whether their parents took the right medicines, ate well or stayed active, until something goes wrong.
