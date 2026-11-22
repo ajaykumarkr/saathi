@@ -742,7 +742,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
   case 'saveMem':saveMember();break;
   case 'delMem':{S.members=S.members.filter(x=>x.id!==m.id);S.active=S.members[0].id;save();render();toast('Removed');break}
   case 'saveApp':S.settings.child=val('sChild')||'Ajay';S.settings.model=val('sModel')||'claude-sonnet-5-5';S.settings.key=val('sKey');save();render();toast('Settings saved');break;
-  case 'resetAll':{const keep=S.settings;S=fresh();S.settings=keep;save();render();toast('Demo data reset');break}}
+  case 'resetAll':{const keep=S.settings;S=fresh();S.settings=keep;S.members.forEach(m=>{const d=day(today(),m);d.chat=[];d.waiting=[];d.escal=[];m.pending=null});sumWho='all';save();render();toast('Demo data reset — chats cleared');break}}
 });
 $('#photoFile').addEventListener('change',e=>{handlePhoto(e.target.files[0]);e.target.value=''});
 $('#docFile').addEventListener('change',e=>{scanDoc(e.target.files[0]);e.target.value=''});
