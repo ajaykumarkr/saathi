@@ -5,7 +5,7 @@ const MODEL = process.env.CLAUDE_MODEL || 'claude-sonnet-5-5';
 module.exports = async function handler(req, res) {
   const send = (code, obj) => { res.statusCode = code; res.setHeader('content-type', 'application/json'); res.end(JSON.stringify(obj)); };
   const key = process.env.ANTHROPIC_API_KEY;
-  if (req.method === 'GET') return send(key ? 200 : 503, { ok: !!key, model: MODEL });
+  if (req.method === 'GET') return send(200, { ok: !!key, model: MODEL, reason: key ? undefined : 'ANTHROPIC_API_KEY not set' });
   if (req.method !== 'POST') return send(405, { error: 'POST only' });
   if (!key) return send(503, { error: 'ANTHROPIC_API_KEY not set' });
 
