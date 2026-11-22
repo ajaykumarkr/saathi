@@ -3,8 +3,8 @@
 **Builder's Day 2026 · RFS 17: AI Agents for Elder Care**
 
 **Live app:** https://saathi-seven-tau.vercel.app/
-**Demo video (2 min):** https://github.com/ajaykumarkr/saathi/blob/main/demo/saathi-demo.mp4 (click "View raw" / download to play)
-**Use-case deck:** https://claude.ai/artifact/RRyFjP4aNt4F6Kit6rVx4M
+**Demo video (2 min):** [demo/saathi-demo.mp4](demo/saathi-demo.mp4) (open, then "View raw" or download to play)
+**Slides (use cases, future, business model):** [demo/saathi-use-cases.pdf](demo/saathi-use-cases.pdf)
 
 Saathi lives in an elderly parent's WhatsApp. It reminds them about tablets, checks a tablet strip or a meal from a photo, chats with them in their own language, and raises an alarm when something sounds wrong. Their children, living in another city, see one calm status screen instead of guessing on a nightly phone call.
 
