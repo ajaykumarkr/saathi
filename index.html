@@ -261,7 +261,7 @@ function blankMember(){return {rules:defRules(),id:'m'+uid(),name:'',call:'',rel
 const defRules=()=>({v:2,quietStart:'22:00',quietEnd:'07:00',maxRem:2,routine:'instant',decision:'ack',personal:'ack',chatter:'reply'});
 let S;
 try{S=JSON.parse(localStorage.getItem('saathi3')||'null')}catch(e){S=null}
-const fresh=()=>({members:[seedAmma(),seedAppa()],active:'amma',settings:{key:S?.settings?.key||'',model:'claude-sonnet-5-5',speak:false,child:'Ajay',sv:2}});
+const fresh=()=>({members:[seedAmma(),seedAppa()].map(m=>({...m,rules:defRules()})),active:'amma',settings:{key:S?.settings?.key||'',model:'claude-sonnet-5-5',speak:false,child:'Ajay',sv:2}});
 if(!S||!S.members||!S.members.length)S=fresh();
 if(S.settings.sv!==2){S.settings.speak=false;S.settings.sv=2}
 S.members.forEach(m=>{m.rules={...defRules(),...(m.rules||{})};if(m.rules.v!==2){m.rules.chatter='reply';m.rules.v=2}});
