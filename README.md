@@ -21,6 +21,10 @@ Millions of Indian parents in their 60s and 70s live alone while their children 
 
 At Walmart I build tools that tell customers exactly where their order is. Yet many of us in Bangalore know less about whether our parents took their BP tablet today. Families deserve that same calm, real-time visibility, without making parents feel watched.
 
+## The core use case
+
+"Amma, if you need help and I'm not replying, message Saathi." Saathi is the always-available first responder when the child is in a meeting or asleep: it answers routine questions instantly from the prescription and the doctor's advice, handles emergencies (call 108 + alert the child), and queues everything that needs the child's decision.
+
 ## Design principle: nothing to install for the parent
 
 The parent only uses WhatsApp, which they already have. One tap (👍), a voice message or a photo is all any interaction needs. The child uses a simple web dashboard.
