@@ -27,19 +27,22 @@ The parent only uses WhatsApp, which they already have. One tap (👍), a voice 
 
 ## What it does
 
-**On the parent's WhatsApp**
-1. **Tablet reminders:** Saathi sends a reminder at each dose time; the parent replies 👍 or "Later". A dose with no 👍 after 60 minutes alerts the family.
-2. **"Is this my tablet?":** the parent sends a photo of a strip. Claude reads the label, matches it against their prescription, says what it's for and whether it's due now. If it isn't on their list, Saathi tells them not to take it and flags the mix-up.
-3. **Meal check:** a photo of a meal gets a sugar and salt judgement for their conditions, plus one practical tip.
-4. **Daily check-in:** the parent types or speaks in Kannada, Hindi or English. Saathi replies in the same language and quietly logs mood, symptoms, tablets taken and walking minutes.
-5. **Red flags:** chest pain, breathlessness, a fall, fainting or low-sugar signs trigger an instruction to sit down and call 108, and an immediate alert to the family.
+Saathi works for any family member (Amma, Appa, Ajji…). Messages go either to the parent's own WhatsApp or to a **caretaker** at home, who gets the same reminders plus a daily care plan.
 
-**For the child**
-6. **Status board:** a one-line verdict ("Amma is doing well" / "Call Amma now"), alerts, 7-day adherence and walking, medicine stock with refill ordering, and a way to message the parent through Saathi.
-7. **Daily AI brief:** four lines covering today's status, what needs attention, a weekly pattern, and a suggested opening line for the phone call.
+**1. The parent's (or caretaker's) WhatsApp**
+- **Tablet reminders** with one-tap 👍 Taken / Later. No 👍 after 60 minutes alerts the family.
+- **"Which tablet now?"**: Saathi answers from the prescribed schedule and what's already been taken, so the parent doesn't have to call their child in the middle of a meeting.
+- **"What did you eat?"**: a scheduled question; the reply can be a photo or a voice note. Claude judges the meal against the doctor's diet rules (good / okay / poor, which rules were kept or broken, one tip).
+- **Tablet-strip photo check:** Claude reads the label and matches it to the prescription; a medicine that isn't on the list is flagged and the parent is told not to take it.
+- **Appointment and test reminders**, including fasting instructions.
+- **Daily check-ins** in Kannada, Hindi, Tamil, Telugu or English, by text or voice; replies can be sent as voice notes.
+- **Red flags** (chest pain, a fall, breathlessness, low-sugar signs) trigger "sit down and call 108" and an immediate family alert.
 
-**For the doctor**
-8. **Weekly report:** adherence per medicine, symptoms with dates and the parent's own words, diet and activity, and an AI-drafted note with two questions for the doctor.
+**2. Health record**: profile, conditions, allergies, current medicines with 7-day adherence, reports with abnormal values flagged, doctors, upcoming and past appointments with the doctor's notes, diet advice, and recent symptoms in the parent's own words. Share it with any doctor by **email**, **download as PDF / print**, or copy as text; an AI-drafted note for the doctor can be added.
+
+**3. Summary for the child**: a one-line status, **"Saathi reminds you"** (overdue eye check, upcoming tests and reviews, refills) with Mark booked / Tell Amma, and a **Daily / Weekly** view of food against the doctor's rules, tablets, walking and mood, plus an AI brief.
+
+**4. Settings**: add family members and caretakers, instructions for Saathi and the caretaker, medicines, the doctor's diet rules, and language.
 
 ## Where the AI is used
 
@@ -54,6 +57,19 @@ All intelligence comes from Claude (Anthropic) through `api/claude.js`:
 | Doctor note | Turns the week's logs into a concise clinical-style note |
 
 **Safety guardrails (in every prompt):** Saathi never diagnoses and never adds, changes or stops a medicine. Medical doubts are routed to "please ask the doctor" and the family is told. Red-flag symptoms always escalate.
+
+## What's real vs simulated
+
+- **Real, live Claude AI:** understanding chat and voice notes, "which tablet now?" answers, tablet and meal photo checks, red-flag escalation, daily and weekly briefs, the doctor note.
+- **Real app logic:** family members and caretakers, health record with email / PDF / print, reminders, refill tracking, summaries.
+- **Simulated:** the WhatsApp screen (production would use the WhatsApp Business API), scheduled messages (triggered by buttons in the demo), refill ordering, and the sample family's previous 7 days of data. Voice input uses the browser's speech recognition.
+
+## Built with
+
+- **Claude API** (Anthropic): all in-product intelligence, including vision for tablet strips and meals
+- **Claude** as a coding and product assistant during the build
+- Vanilla HTML/CSS/JavaScript, a zero-dependency Node server, **Vercel** for hosting and the serverless API proxy, **GitHub**
+- Browser Web Speech API for voice input and read-aloud
 
 ## Run it
 
@@ -71,19 +87,21 @@ You can also paste your own key in the app's Settings to call Claude directly fr
 
 ## Demo flow (3 minutes)
 
-1. **Amma's phone:** "Send next tablet reminder" → tap 👍 Taken.
-2. Send a photo of a tablet strip → Saathi confirms it's the BP tablet and that it's due.
-3. Speak or type in Kannada: "Knees are paining, didn't walk today" → kind reply; "What Saathi noted" updates.
-4. Type "chest pain" → Saathi says call 108 → switch to **Family**, which now reads "Call Amma now".
-5. "Summarise Amma's day" → AI brief. Low BP-tablet stock → Order refill.
-6. **Doctor** → weekly report → "Draft with Saathi".
+One user, one flow: Ajay is in a meeting in Bangalore; Amma is at home in Mysuru.
+
+1. **Amma's phone:** Amma asks "Which tablet now?" → Saathi answers from her schedule; she taps 👍.
+2. "What did you eat?" → Amma sends a lunch photo → judged against Dr. Rao's diet rules.
+3. Amma sends a photo of a tablet strip → Saathi confirms what it is and whether it's due.
+4. **Summary:** Ajay sees one nudge, the overdue eye check and a low BP-tablet stock → Mark booked, Order refill, weekly view, AI brief.
+5. **Health record:** email the record to Dr. Rao or download the PDF before the next visit.
+6. Switch to **Appa** → the same flow runs through his caretaker, Manju.
 
 The demo persona (Lakshmi, 68, Mysuru) and her 7 days of history are sample data. The WhatsApp screen is a simulation of the real channel.
 
 ## Project structure
 
 ```
-index.html      Single-page app: Amma's WhatsApp view, Family dashboard, Doctor report
+index.html      Single-page app: phone (WhatsApp) view, health record, summary, settings
 api/claude.js   Claude proxy (Vercel serverless function; also used locally)
 server.js       Zero-dependency local server
 .env.example    Environment variables template
