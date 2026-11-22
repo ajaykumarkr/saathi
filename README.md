@@ -4,6 +4,8 @@
 
 **Live app:** https://saathi-seven-tau.vercel.app/
 **Demo video (2 min):** https://saathi-seven-tau.vercel.app/demo/saathi-demo.mp4 (also in this repo: `demo/saathi-demo.mp4`)
+**Use-case deck:** https://claude.ai/artifact/RRyFjP4aNt4F6Kit6rVx4M
+**Submission kit (pitch, demo script, Q&A):** https://claude.ai/artifact/JZBnZZRPtaNQzTXnq8NwFL
 
 Saathi lives in an elderly parent's WhatsApp. It reminds them about tablets, checks a tablet strip or a meal from a photo, chats with them in their own language, and raises an alarm when something sounds wrong. Their children, living in another city, see one calm status screen instead of guessing on a nightly phone call.
 
@@ -128,13 +130,27 @@ server.js       Zero-dependency local server
 .env.example    Environment variables template
 ```
 
-## Roadmap
+## Future use cases
 
-- **Real WhatsApp:** WhatsApp Business API (via Twilio or Meta Cloud API) with approved reminder templates.
-- **Voice in Indian languages:** Sarvam AI (Saaras speech-to-text, Bulbul text-to-speech) for Kannada voice notes in and out.
-- **Phone calls for parents without WhatsApp:** a voice agent that calls a normal phone number.
-- **Prescription photo → schedule:** read a new prescription after a doctor visit and update the medicine plan, with the child's approval.
-- **Pharmacy integration** for one-tap refills, and multiple caregivers per parent.
+- **Fall and inactivity alerts** (suggested by my Builder's Day mentor): a home camera or motion sensor detects a fall, or no movement by mid-morning; Saathi calls the parent, then alerts the child, caretaker and a neighbour. Opt-in, processed on the device, no video stored.
+- **BP and sugar meters, wearables:** readings flow in automatically; out-of-range values reach the child and the doctor note.
+- **Voice calls in Kannada and other languages** for parents without WhatsApp, using Indian-language speech models (e.g. Sarvam).
+- **Real WhatsApp channel:** WhatsApp Business API (via Twilio or Meta Cloud API) with approved reminder templates.
+- **One-tap refills and home lab tests:** pharmacy delivery when stock runs low; sample collection booked for due tests.
+- **Doctor visit companion:** record shared before the visit; the new prescription and advice captured after.
+- **Family circle:** siblings and caretakers share one view, with tasks assigned (who books, who calls, who visits).
+
+## Business model
+
+The child pays; the parent uses it free with nothing to install.
+
+| Plan | Includes | Price |
+|---|---|---|
+| Free | One parent; tablet reminders and "which tablet now?" answers; 7-day history | ₹0 |
+| Family | Up to 3 parents; photo checks, prescription reading, health record, weekly insights | to be validated |
+| Family+ | Caretaker mode, fall and inactivity alerts, BP and sugar meter sync, priority escalation | to be validated |
+
+Later revenue: pharmacy and home-lab referrals, clinic partnerships, and employers offering Saathi as a caregiver benefit. Running cost per parent is a few AI calls a day plus WhatsApp message fees.
 
 ## Limitations
 
